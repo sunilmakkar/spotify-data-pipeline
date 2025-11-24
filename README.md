@@ -42,9 +42,9 @@
 ### Phase 1.2: Spotify Event Generation (Days 3-4)
 
 #### Tasks:
-- [ ] Get Spotify API credentials (create app in Spotify Developer Dashboard)
-- [ ] Write Python script to fetch your listening history
-- [ ] Transform API response into standardized event format:
+- ✅ Get Spotify API credentials (create app in Spotify Developer Dashboard)
+- ✅ Write Python script to fetch your listening history
+- ✅ Transform API response into standardized event format:
 ```python
 {
   "event_id": "uuid",
@@ -59,41 +59,41 @@
   "device_type": "desktop"
 }
 ```
-- [ ] Alternative: Create event simulator if API limits hit
-- [ ] Produce events to Kafka topic `user_plays`
+- ✅ Alternative: Create event simulator if API limits hit
+- ✅  Produce events to Kafka topic `user_plays`
 
 #### Deliverables:
-- [ ] Python Kafka producer script
-- [ ] Events visible in Confluent Cloud UI
+- ✅ Python Kafka producer script
+- ✅ Events visible in Confluent Cloud UI
 
 #### Definition of Done:
-- [ ] Can see 100+ events in Kafka topic
-- [ ] Events have correct schema
-- [ ] Can produce events on demand
+- ✅ Can see 100+ events in Kafka topic
+- ✅ Events have correct schema
+- ✅ Can produce events on demand
 
 ---
 
 ### Phase 1.3: Kafka → S3 Consumer (Days 5-7)
 
 #### Tasks:
-- [ ] Write Kafka consumer in Python
-- [ ] Consume events from `user_plays` topic
-- [ ] Batch events (e.g., every 100 events or 60 seconds)
-- [ ] Convert to Parquet format
-- [ ] Write to S3 with partitioning:
+- ✅ Write Kafka consumer in Python
+- ✅ Consume events from `user_plays` topic
+- ✅ Batch events (e.g., every 100 events or 60 seconds)
+- ✅ Convert to Parquet format
+- ✅ Write to S3 with partitioning:
   - `s3://spotify-data-lake/bronze/plays/year=2025/month=11/day=18/hour=14/part-001.parquet`
-- [ ] Add error handling (retry logic, dead letter queue concept)
-- [ ] Test: Run producer and consumer together
+- ✅ Add error handling (retry logic, dead letter queue concept)
+- ✅ Test: Run producer and consumer together
 
 #### Deliverables:
-- [ ] Kafka consumer script
-- [ ] Parquet files in S3
+- ✅ Kafka consumer script
+- ✅ Parquet files in S3
 
 #### Definition of Done:
-- [ ] Events flow automatically: Kafka → S3
-- [ ] Parquet files readable (verify with pandas)
-- [ ] Files properly partitioned by date/hour
-- [ ] Consumer can run for 1+ hours without crashing
+- ✅ Events flow automatically: Kafka → S3
+- ✅ Parquet files readable (verify with pandas)
+- ✅ Files properly partitioned by date/hour
+- ✅ Consumer can run for 1+ hours without crashing
 
 **Phase 1 Milestone:** ✅ End-to-end data ingestion pipeline working
 
