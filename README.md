@@ -139,29 +139,29 @@ CREATE EXTERNAL TABLE bronze.plays
 ### Phase 2.2: DBT Project Setup (Days 10-11)
 
 #### Tasks:
-- [ ] Install DBT: `pip install dbt-snowflake`
-- [ ] Initialize DBT project: `dbt init spotify_analytics`
-- [ ] Configure `profiles.yml` with Snowflake connection
-- [ ] Create folder structure:
+- ✅ Install DBT: `pip install dbt-snowflake`
+- ✅  Initialize DBT project: `dbt init spotify_analytics`
+- ✅  Configure `profiles.yml` with Snowflake connection
+- ✅  Create folder structure:
   - `models/bronze/` (sources)
   - `models/silver/` (cleaned)
   - `models/gold/` (metrics)
-- [ ] Define sources in `models/bronze/sources.yml`:
+- ✅  Define sources in `models/bronze/sources.yml`:
 ```yaml
 sources:
   - name: bronze
     tables:
       - name: plays
 ```
-- [ ] Test connection: `dbt debug`
+- ✅  Test connection: `dbt debug`
 
 #### Deliverables:
-- [ ] DBT project initialized
-- [ ] Connected to Snowflake
+- ✅  DBT project initialized
+- ✅  Connected to Snowflake
 
 #### Definition of Done:
-- [ ] `dbt debug` passes
-- [ ] Can see bronze tables in DBT
+- ✅  `dbt debug` passes
+- ✅  Can see bronze tables in DBT
 
 ---
 

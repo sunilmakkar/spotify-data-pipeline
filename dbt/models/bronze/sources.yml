@@ -1,0 +1,31 @@
+version: 2
+
+sources:
+  - name: bronze
+    description: "Bronze layer - raw data from S3 via Snowflake external tables"
+    database: spotify_data
+    schema: bronze
+    tables:
+      - name: plays
+        description: "Raw play events from Kafka/S3"
+        columns:
+          - name: event_id
+            description: "Unique event identifier"
+          - name: user_id
+            description: "User who played the track"
+          - name: event_type
+            description: "Type of event (play, skip, like)"
+          - name: track_id
+            description: "Unique track identifier"
+          - name: track_name
+            description: "Name of the track"
+          - name: artist_name
+            description: "Artist name"
+          - name: album_name
+            description: "Album name"
+          - name: duration_ms
+            description: "Track duration in milliseconds"
+          - name: played_at
+            description: "Timestamp when track was played"
+          - name: device_type
+            description: "Device type (desktop, mobile, etc)"
