@@ -107,32 +107,32 @@
 ### Phase 2.1: Snowflake Setup (Days 8-9)
 
 #### Tasks:
-- [ ] Create Snowflake database: `SPOTIFY_DATA`
-- [ ] Create schemas: `BRONZE`, `SILVER`, `GOLD`
-- [ ] Create external stage pointing to S3:
+- ✅ Create Snowflake database: `SPOTIFY_DATA`
+- ✅ Create schemas: `BRONZE`, `SILVER`, `GOLD`
+- ✅ Create external stage pointing to S3:
 ```sql
 CREATE STAGE bronze_stage
   URL = 's3://spotify-data-lake/bronze/'
   CREDENTIALS = (AWS_KEY_ID='...' AWS_SECRET_KEY='...');
 ```
-- [ ] Create external table for plays:
+- ✅ Create external table for plays:
 ```sql
 CREATE EXTERNAL TABLE bronze.plays
   WITH LOCATION = @bronze_stage/plays/
   FILE_FORMAT = (TYPE = PARQUET);
 ```
-- [ ] Test query: `SELECT * FROM bronze.plays LIMIT 10;`
-- [ ] Set up auto-suspend (1 min idle) to control costs
-- [ ] Set warehouse size to X-Small
+- ✅ Test query: `SELECT * FROM bronze.plays LIMIT 10;`
+- ✅ Set up auto-suspend (1 min idle) to control costs
+- ✅ Set warehouse size to X-Small
 
 #### Deliverables:
-- [ ] Snowflake database structure
-- [ ] External tables querying S3 data
+- ✅ Snowflake database structure
+- ✅ External tables querying S3 data
 
 #### Definition of Done:
-- [ ] Can query S3 Parquet files from Snowflake
-- [ ] Warehouse auto-suspends (verify in usage dashboard)
-- [ ] Costs tracking < $1/day
+- ✅ Can query S3 Parquet files from Snowflake
+- ✅ Warehouse auto-suspends (verify in usage dashboard)
+- ✅ Costs tracking < $1/day
 
 ---
 
