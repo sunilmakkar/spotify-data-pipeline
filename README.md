@@ -168,7 +168,7 @@ sources:
 ### Phase 2.3: Silver Layer Transformations (Days 12-13)
 
 #### Tasks:
-- [ ] Create `models/silver/silver_plays.sql`:
+- ✅ Create `models/silver/silver_plays.sql`:
   - Remove duplicates (same event_id)
   - Cast data types properly
   - Filter out invalid records (null user_id, negative duration)
@@ -192,7 +192,7 @@ WHERE user_id IS NOT NULL
   AND duration_ms < 600000  -- less than 10 min (catches errors)
 ```
 
-- [ ] Add DBT tests:
+- ✅ Add DBT tests:
 ```yaml
 models:
   - name: silver_plays
@@ -205,17 +205,17 @@ models:
         tests:
           - not_null
 ```
-- [ ] Run: `dbt run --models silver_plays`
-- [ ] Run: `dbt test --models silver_plays`
+- ✅ Run: `dbt run --models silver_plays`
+- ✅ Run: `dbt test --models silver_plays`
 
 #### Deliverables:
-- [ ] Silver layer model
-- [ ] Passing DBT tests
+- ✅ Silver layer model
+- ✅ Passing DBT tests
 
 #### Definition of Done:
-- [ ] Silver table exists in Snowflake
-- [ ] All DBT tests pass
-- [ ] Can query clean data
+- ✅ Silver table exists in Snowflake
+- ✅ All DBT tests pass
+- ✅ Can query clean data
 
 ---
 

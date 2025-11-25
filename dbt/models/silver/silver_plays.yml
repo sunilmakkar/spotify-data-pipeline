@@ -1,0 +1,64 @@
+version: 2
+
+models:
+  - name: silver_plays
+    description: >
+      Cleaned and validated Spotify play events from the bronze layer.
+      This model removes duplicates, filters invalid records, and casts
+      data types appropriately for downstream analytics.
+    
+    columns:
+      - name: event_id
+        description: Unique identifier for each play event
+        tests:
+          - unique
+          - not_null
+      
+      - name: user_id
+        description: Identifier for the user who played the track
+        tests:
+          - not_null
+      
+      - name: event_type
+        description: Type of event (always 'play' in this table)
+        tests:
+          - not_null
+      
+      - name: track_id
+        description: Unique identifier for the track
+        tests:
+          - not_null
+      
+      - name: track_name
+        description: Name of the track that was played
+        tests:
+          - not_null
+      
+      - name: artist_name
+        description: Name of the artist
+        tests:
+          - not_null
+      
+      - name: album_name
+        description: Name of the album
+      
+      - name: duration_ms
+        description: Duration of the track in milliseconds
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 1
+              max_value: 600000
+      
+      - name: played_at
+        description: Timestamp when the track was played (ISO 8601 format)
+        tests:
+          - not_null
+      
+      - name: device_type
+        description: Type of device used for playback (mobile, desktop, etc.)
+      
+      - name: processed_at
+        description: Timestamp when this record was processed into the silver layer
+        tests:
+          - not_null

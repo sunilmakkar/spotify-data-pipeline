@@ -34,11 +34,14 @@ models:
     # Bronze layer - views of external tables
     bronze:
       +materialized: view
+      +schema: bronze
     
     # Silver layer - cleaned tables
     silver:
       +materialized: table
+      +schema: silver
     
     # Gold layer - aggregated metrics
     gold:
       +materialized: table
+      +schema: gold
