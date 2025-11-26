@@ -222,7 +222,7 @@ models:
 ### Phase 2.4: Gold Layer Analytics (Day 14)
 
 #### Tasks:
-- [ ] Create `models/gold/user_daily_listening.sql`:
+- ✅ Create `models/gold/user_daily_listening.sql`:
 ```sql
 SELECT
   user_id,
@@ -236,7 +236,7 @@ FROM {{ ref('silver_plays') }}
 GROUP BY user_id, DATE(played_at)
 ```
 
-- [ ] Create `models/gold/track_popularity.sql`:
+- ✅ Create `models/gold/track_popularity.sql`:
 ```sql
 SELECT
   track_id,
@@ -250,18 +250,19 @@ GROUP BY track_id, track_name, artist_name
 ORDER BY play_count DESC
 ```
 
-- [ ] Create `models/gold/artist_stats.sql`
-- [ ] Run all models: `dbt run`
-- [ ] Generate docs: `dbt docs generate` and `dbt docs serve`
+- ✅ Create `models/gold/artist_stats.sql`
+- ✅ Create `models/gold/device_usage.sql`
+- ✅ Run all models: `dbt run`
+- ✅ Generate docs: `dbt docs generate` and `dbt docs serve`
 
 #### Deliverables:
-- [ ] Gold layer metrics tables
-- [ ] DBT documentation
+- ✅ Gold layer metrics tables
+- ✅ DBT documentation
 
 #### Definition of Done:
-- [ ] 3+ gold tables in Snowflake
-- [ ] Can query your daily listening stats
-- [ ] DBT docs viewable in browser
+- ✅ 3+ gold tables in Snowflake
+- ✅ Can query your daily listening stats
+- ✅ DBT docs viewable in browser
 
 **Phase 2 Milestone:** ✅ Clean, analytics-ready data in Snowflake
 
