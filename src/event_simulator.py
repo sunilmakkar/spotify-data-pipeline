@@ -1,6 +1,7 @@
 # event_simulator.py
 import uuid
 import random
+import hashlib
 from datetime import datetime, timezone, timedelta
 import json
 from confluent_kafka import Producer
@@ -28,16 +29,27 @@ class EventSimulator:
             {"track_name": "Watermelon Sugar", "artist": "Harry Styles", "album": "Fine Line", "duration": 174000},
             {"track_name": "drivers license", "artist": "Olivia Rodrigo", "album": "SOUR", "duration": 242014},
         ]
+    
+    def generate_track_id(self, track_name, artist_name):
+        """Generate deterministic track_id based on track name and artist"""
+        # Create a unique string combining track and artist
+        unique_string = f"{track_name}_{artist_name}".lower()
+        # Hash it to create a consistent track_id
+        hash_digest = hashlib.md5(unique_string.encode()).hexdigest()
+        return f"track_{hash_digest[:12]}"
         
     def generate_event(self):
         """Generate a random simulated event"""
         track = random.choice(self.tracks)
         
+        # Generate deterministic track_id (same song = same ID)
+        track_id = self.generate_track_id(track["track_name"], track["artist"])
+        
         return {
             "event_id": str(uuid.uuid4()),
             "user_id": "simulated_user_123",
             "event_type": "play",
-            "track_id": f"sim_{uuid.uuid4().hex[:10]}",
+            "track_id": track_id,  # Now deterministic!
             "track_name": track["track_name"],
             "artist_name": track["artist"],
             "album_name": track["album"],

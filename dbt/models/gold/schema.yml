@@ -1,0 +1,166 @@
+version: 2
+
+models:
+  - name: daily_user_stats
+    description: >
+      Daily aggregated listening statistics per user.
+      Shows engagement metrics including play counts, listening time,
+      and variety of content consumed each day.
+    columns:
+      - name: date
+        description: Date of listening activity
+        tests:
+          - not_null
+      
+      - name: user_id
+        description: User identifier
+        tests:
+          - not_null
+      
+      - name: total_plays
+        description: Total number of tracks played on this date
+        tests:
+          - not_null
+      
+      - name: total_listening_time_ms
+        description: Total listening time in milliseconds
+        tests:
+          - not_null
+      
+      - name: unique_tracks
+        description: Number of unique tracks played
+        tests:
+          - not_null
+      
+      - name: unique_artists
+        description: Number of unique artists played
+        tests:
+          - not_null
+      
+      - name: avg_track_duration_ms
+        description: Average track duration in milliseconds
+        tests:
+          - not_null
+
+  - name: top_tracks
+    description: >
+      All-time track rankings based on play count.
+      Includes track metadata and listening history.
+    columns:
+      - name: track_id
+        description: Unique track identifier
+        tests:
+          - unique
+          - not_null
+      
+      - name: track_name
+        description: Name of the track
+        tests:
+          - not_null
+      
+      - name: artist_name
+        description: Artist who performed the track
+        tests:
+          - not_null
+      
+      - name: album_name
+        description: Album containing the track
+      
+      - name: total_plays
+        description: Total number of times this track was played
+        tests:
+          - not_null
+      
+      - name: total_listening_time_ms
+        description: Total time spent listening to this track
+        tests:
+          - not_null
+      
+      - name: first_played_at
+        description: Timestamp of first play
+        tests:
+          - not_null
+      
+      - name: last_played_at
+        description: Timestamp of most recent play
+        tests:
+          - not_null
+      
+      - name: rank
+        description: Popularity ranking (1 = most played)
+        tests:
+          - unique
+          - not_null
+
+  - name: top_artists
+    description: >
+      All-time artist rankings based on play count.
+      Shows artist popularity and catalog diversity.
+    columns:
+      - name: artist_name
+        description: Artist name
+        tests:
+          - unique
+          - not_null
+      
+      - name: total_plays
+        description: Total plays across all tracks by this artist
+        tests:
+          - not_null
+      
+      - name: total_listening_time_ms
+        description: Total listening time for this artist
+        tests:
+          - not_null
+      
+      - name: unique_tracks
+        description: Number of different tracks played by this artist
+        tests:
+          - not_null
+      
+      - name: first_played_at
+        description: First time this artist was played
+        tests:
+          - not_null
+      
+      - name: last_played_at
+        description: Most recent play of this artist
+        tests:
+          - not_null
+      
+      - name: rank
+        description: Popularity ranking (1 = most played artist)
+        tests:
+          - unique
+          - not_null
+
+  - name: device_usage
+    description: >
+      Listening statistics aggregated by device type.
+      Shows device preferences and usage patterns.
+    columns:
+      - name: device_type
+        description: Type of device used for playback
+        tests:
+          - unique
+          - not_null
+      
+      - name: total_plays
+        description: Total plays on this device type
+        tests:
+          - not_null
+      
+      - name: total_listening_time_ms
+        description: Total listening time on this device
+        tests:
+          - not_null
+      
+      - name: play_percentage
+        description: Percentage of all plays that occurred on this device
+        tests:
+          - not_null
+      
+      - name: avg_track_duration_ms
+        description: Average track duration on this device
+        tests:
+          - not_null

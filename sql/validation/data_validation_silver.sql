@@ -1,26 +1,27 @@
 -- ============================================================================
--- SILVER LAYER EXPLORATION - PHASE 2.3
--- Purpose: Examine bronze data structure before building transformations
+-- DATA VALIDATION QUERIES - SPOTIFY DATA PIPELINE
+-- ============================================================================
+-- Purpose: Validate data quality across Bronze, Silver, and Gold layers
+-- Project: Spotify Data Pipeline Recreation
+-- Phases: 2.3 (Silver Layer) and 2.4 (Gold Layer)
 -- ============================================================================
 
--- Set context 
-USE SPOTIFY_DATA;
-USE SCHEMA BRONZE;
+-- Set default context
+USE DATABASE SPOTIFY_DATA;
 USE WAREHOUSE SPOTIFY_WH;
 
 
 -- ============================================================================
--- 1. ROW COUNT CHECK
+-- BRONZE LAYER VALIDATION
 -- ============================================================================
--- Expected: ~200 rows (from Phase 1.3 Kafka consumer)
+USE SCHEMA BRONZE;
+
+-- 1. Row Count Check
+-- Expected: ~400 rows
 SELECT COUNT(*) as total_rows
 FROM BRONZE.plays;
 
-
--- ============================================================================
--- 2. SAMPLE RECORDS EXAMINATION
--- ============================================================================
--- Purpose: Understand schema and verify data looks correct
+-- 2. Sample Records Examination
 -- Note: Using VALUE: syntax because this is an external table
 SELECT
     VALUE:event_id::VARCHAR as event_id,
@@ -36,11 +37,7 @@ SELECT
 FROM BRONZE.plays
 LIMIT 10;
 
-
--- ============================================================================
--- 3. DUPLICATE CHECK
--- ============================================================================
--- Purpose: Identify if any event_ids appear multiple times
+-- 3. Duplicate Check
 -- Expected: No duplicates (event_id should be unique)
 SELECT
     VALUE:event_id::VARCHAR as event_id,
@@ -50,37 +47,28 @@ GROUP BY VALUE:event_id
 HAVING COUNT(*) > 1
 ORDER BY occurrences DESC;
 
-
--- ============================================================================
--- 4. DATA QUALITY ASSESSMENT
--- ============================================================================
--- Purpose: Identify records that need filtering in silver layer
--- Checks:
---   - Null user_ids (should be filtered out)
---   - Invalid durations (≤ 0ms means not played)
---   - Suspiciously long tracks (> 10 minutes suggests data error)
+-- 4. Data Quality Assessment
+-- Checks for: null user_ids, invalid durations, suspiciously long tracks
 SELECT
     COUNT(*) as total_records,
     SUM(CASE WHEN VALUE:user_id IS NULL THEN 1 ELSE 0 END) as null_user_ids,
-    SUM(CASE WHEN VALUE:duration_is::NUMBER <= 0 THEN 1 ELSE 0 END) as invalid_durations,
+    SUM(CASE WHEN VALUE:duration_ms::NUMBER <= 0 THEN 1 ELSE 0 END) as invalid_durations,
     SUM(CASE WHEN VALUE:duration_ms::NUMBER > 600000 THEN 1 ELSE 0 END) as suspiciously_long_tracks
 FROM BRONZE.plays;
 
 
 -- ============================================================================
--- 5. SILVER LAYER VALIDATION
+-- SILVER LAYER VALIDATION
 -- ============================================================================
--- Purpose: Verify silver layer table was created correctly
--- Expected: 200 rows with proper data types (no longer VARIANT)
-
-USE DATABASE SPOTIFY_DATA;
 USE SCHEMA SILVER;
 
--- Row count check
+-- 1. Row Count Check
+-- Expected: Same as bronze (~400 rows)
 SELECT COUNT(*) as total_rows
 FROM SILVER.silver_plays;
 
--- Sample some records (none with proper types, not VARIANT!)
+-- 2. Sample Records
+-- Purpose: Verify proper data types (no longer VARIANT)
 SELECT
     event_id,
     user_id,
@@ -89,16 +77,11 @@ SELECT
     duration_ms,
     played_at,
     processed_at
-FROM silver_plays
+FROM SILVER.silver_plays
 LIMIT 5;
 
-
--- ============================================================================
--- 6. SILVER VS BRONZE COMPARISON
--- ============================================================================
--- Purpose: Verify silver layer transformations worked correctly
-
--- Compare row counts (should be equal - no records filtered out)
+-- 3. Bronze vs Silver Comparison
+-- Row counts should match (no filtering occurred)
 SELECT 
     'BRONZE' as layer,
     COUNT(*) as row_count
@@ -109,8 +92,8 @@ SELECT
     COUNT(*) as row_count
 FROM SILVER.silver_plays;
 
--- Verify data types are proper (no more VARIANT)
--- Check column metadata
+-- 4. Data Type Verification
+-- Check column metadata (should see proper types, not VARIANT)
 SELECT 
     column_name,
     data_type,
@@ -120,7 +103,8 @@ WHERE table_schema = 'SILVER'
   AND table_name = 'SILVER_PLAYS'
 ORDER BY ordinal_position;
 
--- Sample comparison: Same event in both layers
+-- 5. Layer Comparison Sample
+-- Verify data matches between bronze and silver
 SELECT * FROM (
     SELECT 
         'BRONZE' as source,
@@ -141,12 +125,109 @@ SELECT * FROM (
     LIMIT 3
 );
 
--- Verify processed_at timestamp was added
+-- 6. Processed Timestamp Verification
+-- Confirm processed_at was added during transformation
 SELECT 
     MIN(processed_at) as earliest_processed,
     MAX(processed_at) as latest_processed,
     COUNT(DISTINCT processed_at) as unique_timestamps
 FROM SILVER.silver_plays;
+
+-- 7. Track ID Validation
+-- Verify deterministic track_ids (same song = same ID)
+SELECT 
+    track_name,
+    COUNT(DISTINCT track_id) as unique_ids,
+    COUNT(*) as total_plays
+FROM SILVER.silver_plays
+GROUP BY track_name
+ORDER BY total_plays DESC;
+
+
+-- ============================================================================
+-- GOLD LAYER VALIDATION
+-- ============================================================================
+USE SCHEMA GOLD;
+
+-- 1. Daily User Stats - Check Aggregations
+SELECT 
+    date,
+    user_id,
+    total_plays,
+    total_listening_time_ms,
+    unique_tracks,
+    unique_artists,
+    avg_track_duration_ms
+FROM daily_user_stats
+ORDER BY date DESC, total_plays DESC
+LIMIT 10;
+
+-- 2. Top Tracks - Most Popular Tracks
+-- Expected: 5 unique tracks with proper rankings
+SELECT 
+    rank,
+    track_id,
+    track_name,
+    artist_name,
+    total_plays,
+    total_listening_time_ms
+FROM top_tracks
+ORDER BY rank;
+
+-- 3. Top Artists - Most Popular Artists
+SELECT 
+    rank,
+    artist_name,
+    total_plays,
+    unique_tracks,
+    total_listening_time_ms
+FROM top_artists
+ORDER BY rank;
+
+-- 4. Device Usage - Device Preferences
+-- Percentages should sum to ~100%
+SELECT 
+    device_type,
+    total_plays,
+    play_percentage,
+    total_listening_time_ms
+FROM device_usage
+ORDER BY total_plays DESC;
+
+-- 5. Cross-Layer Totals Verification
+-- Gold totals should match silver record count
+SELECT 
+    (SELECT COUNT(*) FROM SILVER.silver_plays) as silver_count,
+    (SELECT SUM(total_plays) FROM GOLD.device_usage) as gold_total_plays;
+
+-- 6. Top Tracks Uniqueness Check
+-- Should show 5 unique tracks (not duplicates)
+SELECT COUNT(DISTINCT track_id) as unique_tracks
+FROM top_tracks;
+
+-- 7. Duplicate Detection
+-- Should return no results
+SELECT 
+    track_id,
+    COUNT(*) as occurrences
+FROM top_tracks
+GROUP BY track_id
+HAVING COUNT(*) > 1;
+
+
+-- ============================================================================
+-- MAINTENANCE QUERIES (Run as needed)
+-- ============================================================================
+
+-- Refresh external table to pick up new S3 files
+-- ALTER EXTERNAL TABLE BRONZE.plays REFRESH;
+
+-- Drop and recreate tables (for debugging/regeneration)
+-- DROP TABLE IF EXISTS SILVER.silver_plays;
+-- DROP TABLE IF EXISTS GOLD.daily_user_stats;
+-- DROP TABLE IF EXISTS GOLD.top_tracks;
+-- DROP TABLE IF EXISTS GOLD.top_artists;
+-- DROP TABLE IF EXISTS GOLD.device_usage;
 
 
 -- ============================================================================
