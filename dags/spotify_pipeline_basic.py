@@ -99,9 +99,29 @@ with DAG(
     )
 
     # Task 6: Run DBT transformations
-    run_dbt_task = BashOperator(
-        task_id='run_dbt',
-        bash_command='cd /opt/airflow/dbt && dbt run',
+
+    # Task 6a: Compile DBT models (validate SQL)
+    dbt_compile_task = BashOperator(
+        task_id='dbt_compile',
+        bash_command='cd /opt/airflow/dbt && dbt compile',
+    )
+
+    # Task 6b: Run Silver layer transformations
+    dbt_run_silver_task = BashOperator(
+        task_id='dbt_run_silver',
+        bash_command='cd /opt/airflow/dbt && dbt run --select silver.*',
+    )
+    
+    # Task 6c: Run Gold layer transformations
+    dbt_run_gold_task = BashOperator(
+        task_id='dbt_run_gold',
+        bash_command='cd /opt/airflow/dbt && dbt run --select gold.*',
+    )
+    
+    # Task 6d: Run DBT tests
+    dbt_test_task = BashOperator(
+        task_id='dbt_test',
+        bash_command='cd /opt/airflow/dbt && dbt test',
     )
 
     # Task 7: Log pipeline success
@@ -126,4 +146,4 @@ with DAG(
     generate_events_task >> wait_for_s3_task
     
     # Sequential flow after both complete
-    wait_for_s3_task >> stop_consumer_task >> refresh_snowflake_task  >> run_dbt_task >> log_success_task
+    wait_for_s3_task >> stop_consumer_task >> refresh_snowflake_task >> dbt_compile_task >> dbt_run_silver_task >> dbt_run_gold_task >> dbt_test_task >> log_success_task
