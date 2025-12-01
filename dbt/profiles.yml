@@ -1,0 +1,26 @@
+data_pipeline:
+  outputs:
+    dev:
+      account: sp54563.ca-central-1.aws
+      database: dbt_db
+      password: Sun97San93
+      role: dbt_role
+      schema: dbt_schema
+      threads: 10
+      type: snowflake
+      user: sunni
+      warehouse: dbt_wh
+  target: dev
+spotify_analytics:
+  outputs:
+    dev:
+      account: uxojbrg-rm52997
+      database: spotify_data
+      password: Sun97**San93**
+      role: accountadmin
+      schema: bronze
+      threads: 4
+      type: snowflake
+      user: sunni
+      warehouse: spotify_wh
+  target: dev
