@@ -187,6 +187,77 @@ def validate_dbt_tests(**context):
         logging.error(error_msg)
         raise ValueError(error_msg)
 
+def validate_event_volume(**context):
+    """
+    Detect abnormal drops in event volume by comparing to 7-day baseline.
+    Alerts if today's volume is significantly lower than historical average.
+    """
+    logging.info("Starting event volume anomaly detection...")
+    
+    # Connect to Snowflake
+    hook = SnowflakeHook(snowflake_conn_id='snowflake_default')
+    
+    # Query daily event counts for last 7 days
+    volume_query = """
+        SELECT 
+            DATE(played_at) as event_date,
+            COUNT(*) as event_count
+        FROM SPOTIFY_DATA.SILVER.silver_plays
+        WHERE played_at >= DATEADD(day, -7, CURRENT_DATE())
+        GROUP BY DATE(played_at)
+        ORDER BY event_date DESC;
+    """
+    
+    results = hook.get_records(volume_query)
+    
+    if not results or len(results) < 2:
+        logging.warning("Insufficient data for volume anomaly detection (need at least 2 days)")
+        return
+    
+    # Extract counts
+    daily_counts = [row[1] for row in results]
+    dates = [row[0] for row in results]
+    
+    # Most recent day is today (or latest data)
+    today_count = daily_counts[0]
+    today_date = dates[0]
+    
+    # Historical baseline (exclude today, use last 6 days)
+    historical_counts = daily_counts[1:]
+    
+    if len(historical_counts) == 0:
+        logging.warning("No historical data available for comparison")
+        return
+    
+    # Calculate baseline average
+    baseline_average = sum(historical_counts) / len(historical_counts)
+    threshold = baseline_average * 0.5  # 50% of average
+    
+    # Log the analysis
+    logging.info(f"Today's date: {today_date}")
+    logging.info(f"Today's event count: {today_count:,}")
+    logging.info(f"Historical average (last {len(historical_counts)} days): {baseline_average:,.0f}")
+    logging.info(f"Threshold (50% of average): {threshold:,.0f}")
+    
+    # Validate volume
+    if today_count >= threshold:
+        variance_pct = ((today_count - baseline_average) / baseline_average) * 100
+        logging.info(f"Event volume validation PASSED - {today_count:,} >= {threshold:,.0f}")
+        logging.info(f"Variance from baseline: {variance_pct:+.1f}%")
+    else:
+        drop_pct = ((baseline_average - today_count) / baseline_average) * 100
+        error_msg = (
+            f"Event volume anomaly detected!\n"
+            f"Today ({today_date}): {today_count:,} events\n"
+            f"Baseline average: {baseline_average:,.0f} events\n"
+            f"Threshold (50%): {threshold:,.0f} events\n"
+            f"Drop: {drop_pct:.1f}% below baseline\n"
+            f"Historical counts: {historical_counts}\n"
+            f"Possible causes: Kafka consumer down, upstream API issues, pipeline not running"
+        )
+        logging.error(error_msg)
+        raise ValueError(error_msg)
+
 # Default arguments for monitoring DAG
 default_args = {
     'owner': 'sunil',
@@ -241,6 +312,14 @@ check_dbt_tests = PythonOperator(
     dag=dag,
 )
 
+# Check 4: Event Volume Anomaly Detection
+check_volume = PythonOperator(
+    task_id='check_volume',
+    python_callable=validate_event_volume,
+    provide_context=True,
+    dag=dag,
+)
+
 # Success task (all checks passed)
 all_checks_passed = DummyOperator(
     task_id='all_checks_passed',
@@ -252,4 +331,4 @@ all_checks_passed = DummyOperator(
 logging.info("Data Quality Monitoring DAG initialized")
 
 # Task dependencies
-start_monitoring >> [check_row_counts, check_freshness, check_dbt_tests] >> all_checks_passed
+start_monitoring >> [check_row_counts, check_freshness, check_dbt_tests, check_volume] >> all_checks_passed
