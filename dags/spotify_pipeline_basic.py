@@ -52,7 +52,7 @@ with DAG(
     dag_id='spotify_data_basic',
     default_args=default_args,
     description='Basic Spotify data pipeline: Events -> DBT transformations',
-    schedule_interval=None,
+    schedule_interval='0 * * * *',
     catchup=False,
     tags=['spotify', 'pipeline', 'basic'],
 ) as dag:
