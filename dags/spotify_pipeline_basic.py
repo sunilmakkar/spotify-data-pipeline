@@ -13,11 +13,39 @@ load_dotenv('/opt/airflow/.env')
 # Default arguments for all tasks
 default_args = {
     'owner': 'airflow',
+    'start_date': datetime(2024, 11, 26),
     'depends_on_past': False,
-    'start_date': datetime(2025, 11, 29),
-    'retries': 0,
-    'retry_delay': timedelta(minutes=5),
+    'retries': 3,                      # Retry failed tasks 3 times
+    'retry_delay': timedelta(minutes=2),  # Wait 2 minutes between retries
+    'retry_exponential_backoff': True,    # Exponential backoff: 2min → 4min → 8min
+    'max_retry_delay': timedelta(minutes=10),  # Cap max wait at 10 minutes
+    'email_on_failure': True,
+    'email_on_retry': False,
+    'email': ['sunil.makkar97@gmail.com'],
 }
+
+def task_failure_alert(context):
+    """
+    Callback function that runs when a task fails after all retries.
+    In production, this would send alerts to Slack/PagerDuty/email.
+    """
+    task_instance = context['task_instance']
+    dag_id = context['dag'].dag_id
+    task_id = task_instance.task_id
+    execution_date = context['execution_date']
+    
+    error_message = f"""
+    TASK FAILURE ALERT
+    DAG: {dag_id}
+    Task: {task_id}
+    Execution Date: {execution_date}
+    
+    Task failed after {task_instance.max_tries} attempts.
+    Check logs for details.
+    """
+    
+    print(error_message)
+    # In production, you'd send this to Slack/email/PagerDuty here
 
 # Define the DAG
 with DAG(
@@ -56,6 +84,7 @@ with DAG(
     generate_events_task = PythonOperator(
         task_id='generate_events',
         python_callable=generate_spotify_events,
+        on_failure_callback=task_failure_alert,
     )
 
     # Task 3: Wait for consumer to write files to S3
@@ -68,6 +97,7 @@ with DAG(
         timeout=180,  # 3 minutes max wait
         poke_interval=10,  # Check every 10 seconds
         mode='poke',
+        on_failure_callback=task_failure_alert,
     )
 
     # Task 4: Stop Kafka consumer
@@ -96,6 +126,7 @@ with DAG(
         warehouse='SPOTIFY_WH',
         database='SPOTIFY_DATA',
         schema='BRONZE',
+        on_failure_callback=task_failure_alert,
     )
 
     # Task 6: Run DBT transformations
@@ -104,24 +135,28 @@ with DAG(
     dbt_compile_task = BashOperator(
         task_id='dbt_compile',
         bash_command='cd /opt/airflow/dbt && dbt compile',
+        on_failure_callback=task_failure_alert,
     )
 
     # Task 6b: Run Silver layer transformations
     dbt_run_silver_task = BashOperator(
         task_id='dbt_run_silver',
         bash_command='cd /opt/airflow/dbt && dbt run --select silver.*',
+        on_failure_callback=task_failure_alert,
     )
     
     # Task 6c: Run Gold layer transformations
     dbt_run_gold_task = BashOperator(
         task_id='dbt_run_gold',
         bash_command='cd /opt/airflow/dbt && dbt run --select gold.*',
+        on_failure_callback=task_failure_alert,
     )
     
     # Task 6d: Run DBT tests
     dbt_test_task = BashOperator(
         task_id='dbt_test',
         bash_command='cd /opt/airflow/dbt && dbt test',
+        on_failure_callback=task_failure_alert,
     )
 
     # Task 7: Log pipeline success
