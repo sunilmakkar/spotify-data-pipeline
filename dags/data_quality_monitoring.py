@@ -258,6 +258,65 @@ def validate_event_volume(**context):
         logging.error(error_msg)
         raise ValueError(error_msg)
 
+def validate_gold_tables(**context):
+    """
+    Verify all Gold layer tables have data.
+    Ensures downstream analytics and dashboards aren't broken.
+    """
+    logging.info("Starting Gold layer completeness validation...")
+    
+    # Connect to Snowflake
+    hook = SnowflakeHook(snowflake_conn_id='snowflake_default')
+    
+    # Define Gold tables to check
+    gold_tables = [
+        'top_tracks',
+        'top_artists',
+        'daily_user_stats',
+        'device_usage'
+    ]
+    
+    empty_tables = []
+    table_counts = {}
+    
+    # Check each table
+    for table in gold_tables:
+        query = f"SELECT COUNT(*) FROM SPOTIFY_DATA.GOLD.{table};"
+        try:
+            result = hook.get_first(query)
+            count = result[0] if result else 0
+            table_counts[table] = count
+            
+            if count == 0:
+                empty_tables.append(table)
+                logging.warning(f"Table {table} is EMPTY (0 rows)")
+            else:
+                logging.info(f"Table {table}: {count:,} rows")
+        
+        except Exception as e:
+            logging.error(f"Error querying {table}: {str(e)}")
+            empty_tables.append(f"{table} (query failed)")
+    
+    # Log summary
+    total_rows = sum(table_counts.values())
+    logging.info(f"Total Gold layer rows: {total_rows:,}")
+    logging.info(f"Tables checked: {len(gold_tables)}")
+    logging.info(f"Empty tables: {len(empty_tables)}")
+    
+    # Validate
+    if len(empty_tables) == 0:
+        logging.info("Gold layer validation PASSED - all tables have data")
+    else:
+        error_msg = (
+            f"Gold layer validation FAILED!\n"
+            f"Empty tables: {empty_tables}\n"
+            f"Table counts: {table_counts}\n"
+            f"These tables are missing data - downstream analytics may be broken!\n"
+            f"Check DBT logs to see if Gold layer transformations failed."
+        )
+        logging.error(error_msg)
+        raise ValueError(error_msg)
+
 # Default arguments for monitoring DAG
 default_args = {
     'owner': 'sunil',
@@ -320,6 +379,14 @@ check_volume = PythonOperator(
     dag=dag,
 )
 
+# Check 5: Gold Layer Completeness
+check_gold_tables = PythonOperator(
+    task_id='check_gold_tables',
+    python_callable=validate_gold_tables,
+    provide_context=True,
+    dag=dag,
+)
+
 # Success task (all checks passed)
 all_checks_passed = DummyOperator(
     task_id='all_checks_passed',
@@ -331,4 +398,4 @@ all_checks_passed = DummyOperator(
 logging.info("Data Quality Monitoring DAG initialized")
 
 # Task dependencies
-start_monitoring >> [check_row_counts, check_freshness, check_dbt_tests, check_volume] >> all_checks_passed
+start_monitoring >> [check_row_counts, check_freshness, check_dbt_tests, check_volume, check_gold_tables] >> all_checks_passed
