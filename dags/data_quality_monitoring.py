@@ -81,6 +81,52 @@ def validate_row_counts(**context):
         logging.error(error_msg)
         raise ValueError(error_msg)
 
+def validate_data_freshness(**context):
+    """
+    Check if the most recent event is within the last 24 hours.
+    Detects if pipeline has stopped generating/ingesting new data.
+    """
+    logging.info("Starting data freshness validation...")
+    
+    # Connect to Snowflake
+    hook = SnowflakeHook(snowflake_conn_id='snowflake_default')
+    
+    # Query most recent event timestamp
+    freshness_query = "SELECT MAX(played_at) as latest_event FROM SPOTIFY_DATA.SILVER.silver_plays;"
+    result = hook.get_first(freshness_query)
+    
+    if not result or result[0] is None:
+        logging.warning("Silver layer has no data - cannot validate freshness")
+        raise ValueError("Silver layer is empty - pipeline may not have run yet")
+    
+    latest_event = result[0]
+    current_time = datetime.now()
+    
+    # Calculate age of most recent event
+    data_age = current_time - latest_event
+    age_hours = data_age.total_seconds() / 3600
+    
+    # Log the results
+    logging.info(f"Most recent event: {latest_event}")
+    logging.info(f"Current time: {current_time}")
+    logging.info(f"Data age: {age_hours:.2f} hours")
+    
+    # Validate freshness (24 hour threshold)
+    threshold_hours = 24
+    if age_hours < threshold_hours:
+        logging.info(f"Data freshness validation PASSED - data is {age_hours:.2f} hours old (< {threshold_hours} hours)")
+    else:
+        error_msg = (
+            f"Data freshness validation FAILED!\n"
+            f"Most recent event: {latest_event}\n"
+            f"Current time: {current_time}\n"
+            f"Data age: {age_hours:.2f} hours\n"
+            f"Threshold: {threshold_hours} hours\n"
+            f"Data is stale - pipeline may not be running or upstream source has issues!"
+        )
+        logging.error(error_msg)
+        raise ValueError(error_msg)
+
 # Default arguments for monitoring DAG
 default_args = {
     'owner': 'sunil',
@@ -119,6 +165,14 @@ check_row_counts = PythonOperator(
     dag=dag,
 )
 
+# Check 2: Data Freshness Validation
+check_freshness = PythonOperator(
+    task_id='check_freshness',
+    python_callable=validate_data_freshness,
+    provide_context=True,
+    dag=dag,
+)
+
 # Success task (all checks passed)
 all_checks_passed = DummyOperator(
     task_id='all_checks_passed',
@@ -130,4 +184,4 @@ all_checks_passed = DummyOperator(
 logging.info("Data Quality Monitoring DAG initialized")
 
 # Task dependencies
-start_monitoring >> check_row_counts >> all_checks_passed
+start_monitoring >> [check_row_counts, check_freshness] >> all_checks_passed
