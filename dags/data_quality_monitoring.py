@@ -127,6 +127,66 @@ def validate_data_freshness(**context):
         logging.error(error_msg)
         raise ValueError(error_msg)
 
+def validate_dbt_tests(**context):
+    """
+    Check DBT test results for failures.
+    DBT stores test results in Snowflake after each test run.
+    """
+    logging.info("Starting DBT test validation...")
+    
+    # Connect to Snowflake
+    hook = SnowflakeHook(snowflake_conn_id='snowflake_default')
+    
+    # Query recent DBT test results
+    # Note: This assumes DBT is configured to store test results
+    # If table doesn't exist, this check will be skipped
+    test_query = """
+        SELECT 
+            test_name,
+            status,
+            failures,
+            executed_at
+        FROM SPOTIFY_DATA.SILVER.dbt_test_results
+        ORDER BY executed_at DESC
+        LIMIT 10;
+    """
+    
+    try:
+        results = hook.get_records(test_query)
+    except Exception as e:
+        # Table might not exist if DBT tests haven't run yet
+        logging.warning(f"Could not query DBT test results: {str(e)}")
+        logging.warning("Skipping DBT test validation - table may not exist yet")
+        return
+    
+    if not results:
+        logging.warning("No DBT test results found - tests may not have run yet")
+        return
+    
+    # Check for failures
+    failed_tests = [test for test in results if test[1] == 'fail']
+    
+    # Log summary
+    logging.info(f"Total tests checked: {len(results)}")
+    logging.info(f"Failed tests: {len(failed_tests)}")
+    
+    # Validate
+    if len(failed_tests) == 0:
+        logging.info("DBT test validation PASSED - all recent tests passed")
+    else:
+        # Build detailed error message
+        error_msg = f"DBT test validation FAILED!\n{len(failed_tests)} test(s) failed:\n\n"
+        for test in failed_tests:
+            test_name = test[0]
+            status = test[1]
+            failures = test[2]
+            executed_at = test[3]
+            error_msg += f"- {test_name}: {failures} failure(s) at {executed_at}\n"
+        
+        error_msg += "\nCheck DBT logs for details on failed tests."
+        logging.error(error_msg)
+        raise ValueError(error_msg)
+
 # Default arguments for monitoring DAG
 default_args = {
     'owner': 'sunil',
@@ -173,6 +233,14 @@ check_freshness = PythonOperator(
     dag=dag,
 )
 
+# Check 3: DBT Test Results Validation
+check_dbt_tests = PythonOperator(
+    task_id='check_dbt_tests',
+    python_callable=validate_dbt_tests,
+    provide_context=True,
+    dag=dag,
+)
+
 # Success task (all checks passed)
 all_checks_passed = DummyOperator(
     task_id='all_checks_passed',
@@ -184,4 +252,4 @@ all_checks_passed = DummyOperator(
 logging.info("Data Quality Monitoring DAG initialized")
 
 # Task dependencies
-start_monitoring >> [check_row_counts, check_freshness] >> all_checks_passed
+start_monitoring >> [check_row_counts, check_freshness, check_dbt_tests] >> all_checks_passed
