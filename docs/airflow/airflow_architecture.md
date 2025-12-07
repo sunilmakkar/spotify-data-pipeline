@@ -471,14 +471,6 @@ The monitoring DAG runs separately from production:
 docker-compose exec airflow-scheduler airflow tasks clear spotify_data_basic dbt_run_gold -y
 ```
 
-### What This Demonstrates for Interviews
-
-- **Defensive programming:** Anticipated failure modes and handled them explicitly
-- **Observability:** Know when things break and have context to debug
-- **Operability:** Clear recovery procedures, not just "restart everything"
-- **Production mindset:** Failure is expected, not exceptional
-- **Resource management:** Clean up processes even when things go wrong
-
 ## 5. Monitoring & Observability
 
 ### Why Independent Monitoring?
@@ -743,14 +735,6 @@ docker-compose exec airflow-scheduler python /opt/airflow/scripts/dashboard.py
 **4. Historical context:** Dashboard shows trends (not just current state)
 **5. Multi-layer validation:** Check Bronze, Silver, Gold, and business logic
 **6. Anomaly detection:** Compare current state to historical baselines
-
-### Interview Talking Points
-
-- **Proactive vs reactive:** Don't wait for users to report issues
-- **Layered monitoring:** Infrastructure (Airflow) + data quality (SQL checks) + business metrics (anomaly detection)
-- **SLAs implicit:** 95% retention, 24-hour freshness, 50% volume threshold
-- **Escalation path:** Email alert → check dashboard → investigate logs → fix root cause
-- **Production-grade:** Same patterns used at Netflix, Uber, Airbnb
 
 ## 6. Scalability Considerations
 
