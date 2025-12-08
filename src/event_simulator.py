@@ -44,8 +44,8 @@ class EventSimulator:
                 # Use next day
                 next_date = last_date + timedelta(days=1)
         else:
-            # First run - start from Dec 1, 2025
-            next_date = datetime(2025, 12, 1, tzinfo=timezone.utc)
+            # First run 
+            next_date = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         
         # Save this date for next run
         with open(self.date_file, 'w') as f:
