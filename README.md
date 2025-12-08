@@ -276,78 +276,78 @@ ORDER BY play_count DESC
 ### Phase 3.1: Airflow Setup (Days 15-17)
 
 #### Tasks:
-- [ ] Launch EC2 instance (t2.medium for Airflow, use free tier if available)
-- [ ] Install Docker and Docker Compose
-- [ ] Set up Airflow using Docker:
+- ✅ Launch EC2 instance (t2.medium for Airflow, use free tier if available)
+- ✅ Install Docker and Docker Compose
+- ✅ Set up Airflow using Docker:
 ```bash
 curl -LfO 'https://airflow.apache.org/docs/apache-airflow/2.7.1/docker-compose.yaml'
 docker-compose up -d
 ```
-- [ ] Access Airflow UI: `http://ec2-ip:8080`
-- [ ] Create connections:
+- ✅ Access Airflow UI: `http://ec2-ip:8080`
+- ✅ Create connections:
   - AWS (for S3)
   - Snowflake
   - Kafka (Confluent)
-- [ ] Test connections in UI
+- ✅ Test connections in UI
 
 #### Deliverables:
-- [ ] Airflow running on EC2
-- [ ] Connections configured
+- ✅ Airflow running on EC2
+- ✅ Connections configured
 
 #### Definition of Done:
-- [ ] Can access Airflow UI
-- [ ] Test connections successful
+- ✅ Can access Airflow UI
+- ✅ Test connections successful
 
 ---
 
 ### Phase 3.2: Create Ingestion DAG (Days 18-19)
 
 #### Tasks:
-- [ ] Create `dags/spotify_ingestion_dag.py`
-- [ ] Tasks:
+- ✅ Create `dags/spotify_ingestion_dag.py`
+- ✅ Tasks:
   - Check Kafka topic has new messages
   - Run consumer (batch consume for 5 minutes)
   - Verify Parquet files landed in S3
   - Run data quality checks
   - Send success/failure alert
-- [ ] Schedule: Every hour
-- [ ] Add retry logic (3 retries, 5 min delay)
-- [ ] Test run manually in Airflow UI
+- ✅ Schedule: Every hour
+- ✅ Add retry logic (3 retries, 5 min delay)
+- ✅ Test run manually in Airflow UI
 
 #### Deliverables:
-- [ ] Ingestion DAG file
-- [ ] DAG visible in Airflow
+- ✅ Ingestion DAG file
+- ✅ DAG visible in Airflow
 
 #### Definition of Done:
-- [ ] DAG runs successfully
-- [ ] Can see task logs
-- [ ] S3 files updated after DAG run
+- ✅ DAG runs successfully
+- ✅ Can see task logs
+- ✅ S3 files updated after DAG run
 
 ---
 
 ### Phase 3.3: Create Transformation DAG (Day 20)
 
 #### Tasks:
-- [ ] Create `dags/dbt_transformation_dag.py`
-- [ ] Tasks:
+- ✅ Create `dags/dbt_transformation_dag.py`
+- ✅ Tasks:
   - Check new data in bronze layer
   - Run `dbt run --models silver.*`
   - Run `dbt test --models silver.*`
   - Run `dbt run --models gold.*`
   - Run `dbt test --models gold.*`
   - Update dashboard metrics
-- [ ] Schedule: Every 6 hours (or after ingestion DAG)
-- [ ] Add task dependencies
-- [ ] Test end-to-end
+- ✅ Schedule: Every 6 hours (or after ingestion DAG)
+- ✅ Add task dependencies
+- ✅ Test end-to-end
 
 #### Deliverables:
-- [ ] DBT transformation DAG
-- [ ] Automated pipeline
+- ✅ DBT transformation DAG
+- ✅ Automated pipeline
 
 #### Definition of Done:
-- [ ] DBT runs via Airflow
-- [ ] Gold tables update automatically
-- [ ] Both DAGs run without manual intervention for 24 hours
+- ✅ DBT runs via Airflow
+- ✅ Gold tables update automatically
+- ✅ Both DAGs run without manual intervention for 24 hours
 
 **Phase 3 Milestone:** ✅ Fully automated data pipeline
 
