@@ -23,7 +23,7 @@ class EventSimulator:
         self.topic = KAFKA_TOPICS['plays']
         
         # Track which date to use for next run
-        self.date_file = '/tmp/simulator_last_date.txt'
+        self.date_file =  '/opt/airflow/src/simulator_last_date.txt'
         self.current_date = self._get_next_date()
         
         # Sample data
