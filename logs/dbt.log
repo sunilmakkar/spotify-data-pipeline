@@ -1,0 +1,51 @@
+[0m19:08:56.331899 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x106b3be00>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10835f9d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10835fb10>]}
+
+
+============================== 19:08:56.334276 | 5422e7a1-e408-43c1-a621-9d5a5c72ab0b ==============================
+[0m19:08:56.334276 [info ] [MainThread]: Running with dbt=1.10.15
+[0m19:08:56.334535 [debug] [MainThread]: running dbt with arguments {'fail_fast': 'False', 'quiet': 'False', 'use_colors': 'True', 'debug': 'False', 'version_check': 'True', 'introspect': 'True', 'no_print': 'None', 'warn_error': 'None', 'static_parser': 'True', 'log_format': 'default', 'write_json': 'True', 'invocation_command': 'dbt init spotify_analytics', 'profiles_dir': '/Users/sunilmakkar/.dbt', 'use_experimental_parser': 'False', 'printer_width': '80', 'target_path': 'None', 'cache_selected_only': 'False', 'indirect_selection': 'eager', 'empty': 'None', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'partial_parse': 'True', 'log_cache_events': 'False', 'send_anonymous_usage_stats': 'True', 'log_path': 'logs'}
+[0m19:08:56.344137 [debug] [MainThread]: Starter project path: /Users/sunilmakkar/spotify-data-pipeline/venv/lib/python3.13/site-packages/dbt/include/starter_project
+[0m19:08:56.347349 [info ] [MainThread]: 
+Your new dbt project "spotify_analytics" was created!
+
+For more information on how to configure the profiles.yml file,
+please consult the dbt documentation here:
+
+  https://docs.getdbt.com/docs/configure-your-profile
+
+One more thing:
+
+Need help? Don't hesitate to reach out to us via GitHub issues or on Slack:
+
+  https://community.getdbt.com/
+
+Happy modeling!
+
+[0m19:08:56.347515 [info ] [MainThread]: Setting up your profile.
+[0m19:10:15.884846 [info ] [MainThread]: Profile spotify_analytics written to /Users/sunilmakkar/.dbt/profiles.yml using target's profile_template.yml and your supplied values. Run 'dbt debug' to validate the connection.
+[0m19:10:15.920169 [debug] [MainThread]: Resource report: {"command_name": "init", "command_success": true, "command_wall_clock_time": 79.61599, "process_in_blocks": "0", "process_kernel_time": 0.186374, "process_mem_max_rss": "194281472", "process_out_blocks": "0", "process_user_time": 0.722937}
+[0m19:10:15.922189 [debug] [MainThread]: Command `dbt init` succeeded at 19:10:15.922045 after 79.62 seconds
+[0m19:10:15.922872 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11d4c6520>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x108268b90>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x11d493460>]}
+[0m19:10:15.923301 [debug] [MainThread]: Flushing usage events
+[0m19:10:16.321780 [debug] [MainThread]: An error was encountered while trying to flush usage events
+[0m19:14:40.005799 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'start', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x10802fe00>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1096339d0>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x109633b10>]}
+
+
+============================== 19:14:40.008203 | 34858616-2739-4255-ad83-1834ef5a0f29 ==============================
+[0m19:14:40.008203 [info ] [MainThread]: Running with dbt=1.10.15
+[0m19:14:40.008459 [debug] [MainThread]: running dbt with arguments {'send_anonymous_usage_stats': 'True', 'partial_parse': 'True', 'introspect': 'True', 'no_print': 'None', 'log_format': 'default', 'debug': 'False', 'use_experimental_parser': 'False', 'use_colors': 'True', 'profiles_dir': '/Users/sunilmakkar/.dbt', 'warn_error_options': 'WarnErrorOptionsV2(error=[], warn=[], silence=[])', 'static_parser': 'True', 'version_check': 'True', 'fail_fast': 'False', 'empty': 'None', 'warn_error': 'None', 'cache_selected_only': 'False', 'quiet': 'False', 'printer_width': '80', 'log_cache_events': 'False', 'target_path': 'None', 'invocation_command': 'dbt debug', 'log_path': 'logs', 'indirect_selection': 'eager', 'write_json': 'True'}
+[0m19:14:40.015551 [info ] [MainThread]: dbt version: 1.10.15
+[0m19:14:40.015720 [info ] [MainThread]: python version: 3.13.2
+[0m19:14:40.015898 [info ] [MainThread]: python path: /Users/sunilmakkar/spotify-data-pipeline/venv/bin/python3.13
+[0m19:14:40.016010 [info ] [MainThread]: os info: macOS-14.5-arm64-arm-64bit-Mach-O
+[0m19:14:40.544648 [info ] [MainThread]: Using profiles dir at /Users/sunilmakkar/.dbt
+[0m19:14:40.544855 [info ] [MainThread]: Using profiles.yml file at /Users/sunilmakkar/.dbt/profiles.yml
+[0m19:14:40.544969 [info ] [MainThread]: Using dbt_project.yml file at /Users/sunilmakkar/spotify-data-pipeline/dbt_project.yml
+[0m19:14:40.545099 [error] [MainThread]: Encountered an error:
+Internal Error
+  Profile should not be None if loading profile completed
+[0m19:14:40.546262 [debug] [MainThread]: Resource report: {"command_name": "debug", "command_success": false, "command_wall_clock_time": 0.56850374, "process_in_blocks": "0", "process_kernel_time": 0.153217, "process_mem_max_rss": "197541888", "process_out_blocks": "0", "process_user_time": 0.722931}
+[0m19:14:40.546510 [debug] [MainThread]: Command `dbt debug` failed at 19:14:40.546475 after 0.57 seconds
+[0m19:14:40.546632 [debug] [MainThread]: Sending event: {'category': 'dbt', 'action': 'invocation', 'label': 'end', 'context': [<snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1103e8050>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1103b4290>, <snowplow_tracker.self_describing_json.SelfDescribingJson object at 0x1102cbce0>]}
+[0m19:14:40.546774 [debug] [MainThread]: Flushing usage events
+[0m19:14:40.986878 [debug] [MainThread]: An error was encountered while trying to flush usage events
