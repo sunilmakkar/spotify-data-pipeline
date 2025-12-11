@@ -21,3 +21,22 @@ Thumbs.db
 
 # Logs
 *.logdata/
+
+# Spotify OAuth cache
+.cache
+
+# Airflow logs and runtime artifacts
+logs/
+airflow.cfg
+airflow.db
+webserver_config.py
+
+# DBT artifacts
+dbt/logs/
+dbt/target/
+dbt/dbt_packages/
+
+# Data files
+*.parquet
+*.csv
+data/

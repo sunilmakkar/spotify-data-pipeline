@@ -1,7 +1,12 @@
 # spotify_client.py
+import sys
+from pathlib import Path
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
+
+sys.path.append(str(Path(__file__).parent.parent))
 from config import SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REDIRECT_URI
+
 import uuid
 from datetime import datetime
 
@@ -13,7 +18,8 @@ class SpotifyClient:
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI,
-            scope="user-read-recently-played user-library-read user-top-read"
+            scope="user-read-recently-played user-library-read user-top-read user-read-private user-read-email",
+            cache_path="/opt/airflow/.cache"
         ))
         
     def get_user_id(self):
@@ -62,7 +68,7 @@ class SpotifyClient:
             "album_name": track['album']['name'],
             "duration_ms": track['duration_ms'],
             "played_at": play_item['played_at'],
-            "device_type": play_item.get('context', {}).get('type', 'unknown')
+            "device_type": (play_item.get('context') or {}).get('type', 'unknown')
         }
     
     def test_connection(self):
@@ -82,8 +88,12 @@ if __name__ == "__main__":
     if client.test_connection():
         print("\nFetching recently played tracks...")
         events = client.get_recently_played(limit=5)
-        
+    
         print(f"\n✓ Fetched {len(events)} events")
-        print("\nSample event:")
-        import json
-        print(json.dumps(events[0], indent=2))
+    
+        if events:
+            print("\nSample event:")
+            import json
+            print(json.dumps(events[0], indent=2))
+        else:
+            print("\nNo recent listening history found. Play some music on Spotify and try again!")

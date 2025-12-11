@@ -69,23 +69,25 @@ with DAG(
     )
 
     # Task 2: Generate Spotify events
-    def generate_spotify_events():
-        """Generate simulated Spotify events and send to Kafka"""
+    def fetch_real_spotify_data():
+        """Fetch real Spotify listening history and send to Kafka"""
         import sys
         sys.path.insert(0, '/opt/airflow')  # Add project root to path
         
-        from src.event_simulator import EventSimulator
+        from src.spotify_historical_backfill import SpotifyHistoricalBackfill
         
-        print("Starting event generation...")
-        simulator = EventSimulator()
-        simulator.simulate_events(count=200)  # Generate 200 events
-        print("Event generation completed!")
-        
+        print("Starting Spotify historical backfill...")
+        backfill = SpotifyHistoricalBackfill()
+        backfill.backfill_recent_plays(limit=50)
+        print("Spotify backfill completed!")
+
     generate_events_task = PythonOperator(
         task_id='generate_events',
-        python_callable=generate_spotify_events,
+        python_callable=fetch_real_spotify_data,  # Changed from generate_spotify_events
         on_failure_callback=task_failure_alert,
     )
+
+
 
     # Task 3: Wait for consumer to write files to S3
     wait_for_s3_task = S3KeySensor(
