@@ -649,6 +649,12 @@ Definition of Done:
 - [ ] Recommendations update within 5-10 seconds of playing new song
 - [ ] Full near real-time user experience implemented
 
+
+## LAST THING TO DO:
+
+AFTER ALL PROJECT IS DONE. ALL DOCUMENTATION IS DONE. WE NEED:
+TESTS TO BE WRITTEN
+
 ---
 
 ## RISK MITIGATION
