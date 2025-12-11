@@ -444,25 +444,25 @@ Definition of Done:
 ### Phase 5.1: Spotify API Setup & Authentication
 
 #### Tasks:
-- [ ] Create Spotify Developer App:
+- ✅ Create Spotify Developer App:
   - Go to https://developer.spotify.com/dashboard
   - Create new app
   - Get Client ID and Client Secret
   - Add redirect URI: `http://localhost:8888/callback`
-- [ ] Create `src/spotify_auth.py`:
+- ✅ Create `src/spotify_auth.py`:
   - Implement authorization code flow
   - Method: `get_authorization_url()` - generates Spotify login URL
   - Method: `get_access_token()` - exchanges code for token
   - Method: `refresh_access_token()` - handles token refresh
-- [ ] Create token storage:
+- ✅ Create token storage:
   - Store tokens in `~/.spotify_tokens.json` or database
   - Include: access_token, refresh_token, expires_at
-- [ ] Build authorization flow:
+- ✅ Build authorization flow:
   - User opens browser to authorize
   - Callback receives authorization code
   - Exchange code for tokens
   - Store tokens securely
-- [ ] Test OAuth flow:
+- ✅ Test OAuth flow:
   - Authorize your Spotify account
   - Verify tokens are stored
   - Verify tokens refresh automatically
@@ -473,26 +473,26 @@ Definition of Done:
 ### Phase 5.2: Historical Data Pipeline
 
 #### Tasks:
-- [ ] Create `src/spotify_api_client.py`:
+- ✅ Create `src/spotify_api_client.py`:
   - Implement SpotifyAPIClient class
   - Method: `get_recently_played()` - fetches last 50 tracks
   - Method: `get_track_details()` - enriches with artist/album info
   - Handle rate limiting and retries
   - Load tokens from storage and auto-refresh
-- [ ] Replace EventSimulator in pipeline:
+- ✅ Replace EventSimulator in pipeline:
   - Update `dags/spotify_pipeline_basic.py`
   - Change `generate_events` task to call `spotify_api_client.py`
   - Remove synthetic data generation logic
   - Keep existing Kafka → S3 → Snowflake flow
-- [ ] Update `.env` file:
+- ✅ Update `.env` file:
   - Add `SPOTIFY_CLIENT_ID`
   - Add `SPOTIFY_CLIENT_SECRET`
   - Add `SPOTIFY_REDIRECT_URI`
-- [ ] Schedule hourly runs:
+- ✅ Schedule hourly runs:
   - Enable DAG schedule in Airflow (every hour)
   - Fetch recently played tracks hourly
   - Build historical listening dataset
-- [ ] Test historical pipeline:
+- ✅ Test historical pipeline:
   - Run DAG manually, verify real Spotify data appears
   - Check Bronze → Silver → Gold layers update correctly
   - Verify dashboard displays real listening history
