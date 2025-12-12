@@ -18,7 +18,7 @@ class SpotifyClient:
             client_id=SPOTIFY_CLIENT_ID,
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI,
-            scope="user-read-recently-played user-library-read user-top-read user-read-private user-read-email",
+            scope="user-read-recently-played user-library-read user-top-read user-read-private user-read-email user-read-playback-state",
             cache_path=".cache"
         ))
         
