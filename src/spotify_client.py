@@ -19,7 +19,7 @@ class SpotifyClient:
             client_secret=SPOTIFY_CLIENT_SECRET,
             redirect_uri=SPOTIFY_REDIRECT_URI,
             scope="user-read-recently-played user-library-read user-top-read user-read-private user-read-email",
-            cache_path="/opt/airflow/.cache"
+            cache_path=".cache"
         ))
         
     def get_user_id(self):
