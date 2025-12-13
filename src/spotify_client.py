@@ -58,9 +58,14 @@ class SpotifyClient:
         Returns:
             Standardized event dictionary
         """
+        # Create deterministic event_id to prevent duplicates
+        # Same play = same event_id, even if script runs multiple times
+        user_id = self.get_user_id()
+        unique_key = f"{user_id}_{track['id']}_{play_item['played_at']}"
+
         return {
-            "event_id": str(uuid.uuid4()),
-            "user_id": self.get_user_id(),
+            "event_id": str(uuid.uuid5(uuid.NAMESPACE_DNS, unique_key)),
+            "user_id": user_id,
             "event_type": "play",
             "track_id": track['id'],
             "track_name": track['name'],

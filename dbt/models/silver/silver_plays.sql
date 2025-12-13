@@ -16,12 +16,18 @@
 --   3. Filter invalid records (defensive WHERE clauses)
 --   4. Add processing metadata (processed_at timestamp)
 --
+-- Deduplication Strategy:
+--   Uses ROW_NUMBER() to handle cases where the same track was played at
+--   the exact same timestamp (duplicates from backfill script running
+--   multiple times with different event_ids). Keeps first occurrence based
+--   on event_id sort order.
+--
 -- Source: bronze.plays (external table reading from S3 Parquet files)
 -- Target: SILVER.silver_plays (materialized table)
 -- ============================================================================
 
 WITH source_data AS (
-    SELECT 
+    SELECT
         VALUE:event_id::VARCHAR AS event_id,
         VALUE:user_id::VARCHAR AS user_id,
         VALUE:event_type::VARCHAR AS event_type,
@@ -33,30 +39,28 @@ WITH source_data AS (
         VALUE:played_at::VARCHAR AS played_at,
         VALUE:device_type::VARCHAR AS device_type
     FROM {{ source('bronze', 'plays') }}
+    WHERE
+      -- Data quality filters
+        VALUE:user_id IS NOT NULL
+        AND VALUE:duration_ms::NUMBER > 0
+        AND VALUE:duration_ms::NUMBER < 600000  -- Less than 10 minutes (catches data errors)
+        AND VALUE:event_id IS NOT NULL
 ),
 
 deduplicated AS (
-    SELECT DISTINCT
-        event_id,
-        user_id,
-        event_type,
-        track_id,
-        track_name,
-        artist_name,
-        album_name,
-        duration_ms,
-        played_at,
-        device_type
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY
+                user_id,
+                track_id,
+                played_at
+            ORDER BY event_id
+        ) as row_num
     FROM source_data
-    WHERE 
-        -- Data quality filters
-        user_id IS NOT NULL
-        AND duration_ms > 0
-        AND duration_ms < 600000  -- Less than 10 minutes (catches data errors)
-        AND event_id IS NOT NULL
 )
 
-SELECT 
+SELECT
     -- Identifiers
     event_id::VARCHAR AS event_id,
     user_id::VARCHAR AS user_id,
@@ -81,3 +85,4 @@ SELECT
     CURRENT_TIMESTAMP() AS processed_at
     
 FROM deduplicated
+WHERE row_num = 1 -- Keep only first occurrence of each unique play
