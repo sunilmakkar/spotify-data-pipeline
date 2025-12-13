@@ -512,21 +512,21 @@ Definition of Done:
 ---
 
 ### Tasks:
-- [ ] Remove unused Python scripts:
+-  ✅ Remove unused Python scripts:
 ```bash
   rm ~/spotify-data-pipeline/src/fetch_audio_features.py
   rm ~/spotify-data-pipeline/src/generate_recommendations.py
 ```
-- [ ] Remove unused DBT models:
+-  ✅ Remove unused DBT models:
 ```bash
   rm ~/spotify-data-pipeline/dbt/models/silver/track_audio_features.sql
   rm ~/spotify-data-pipeline/dbt/models/gold/user_listening_profile.sql
   rm ~/spotify-data-pipeline/dbt/models/gold/track_recommendations.sql
 ```
-- [ ] Remove audio features source from DBT sources file:
+-  ✅ Remove audio features source from DBT sources file:
   - Edit `~/spotify-data-pipeline/dbt/models/bronze/sources.yml`
   - Delete the `track_audio_features` source entry
-- [ ] Commit cleanup to Git:
+-  ✅ Commit cleanup to Git:
 ```bash
   git add -A
   git commit -m "Remove unused audio features files - switching to collaborative filtering"
