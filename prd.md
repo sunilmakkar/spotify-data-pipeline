@@ -559,7 +559,7 @@ Definition of Done:
 **Concept:** If you play Track A and Track B in the same hour 70% of the time, they have high co-occurrence (0.70 score).
 
 #### Tasks:
-- [ ] Create `dbt/models/gold/track_cooccurrence.sql`:
+- ✅ Create `dbt/models/gold/track_cooccurrence.sql`:
   - Define listening session as tracks played within 1 hour of each other
   - Calculate co-occurrence scores for track pairs
   - Formula: `cooccurrence_score = count(sessions with both tracks) / count(sessions with track A)`
@@ -665,7 +665,7 @@ ORDER BY cc.track_a, cooccurrence_score DESC
 **Concept:** Artists you play more often, more recently, and with more variety of tracks get higher affinity scores.
 
 #### Tasks:
-- [ ] Create `dbt/models/gold/artist_affinity.sql`:
+- ✅ Create `dbt/models/gold/artist_affinity.sql`:
   - Calculate artist scores based on:
     - Total plays (quantity)
     - Recent plays weighted 2x (recency - last 7 days)
@@ -758,7 +758,7 @@ ORDER BY affinity_score DESC
 6. Return top 50 recommendations
 
 #### Tasks:
-- [ ] Create `dbt/models/gold/track_recommendations.sql`:
+- ✅ Create `dbt/models/gold/track_recommendations.sql`:
   - Query top tracks from your listening history (>3 plays)
   - Join with `track_cooccurrence` to find candidate recommendations
   - Join with `artist_affinity` to boost scores for preferred artists
@@ -878,7 +878,7 @@ ORDER BY recommendation_score DESC
 **What it does:** Integrate recommendation models into production pipeline.
 
 #### Tasks:
-- [ ] Update `dags/spotify_pipeline_basic.py`:
+- ✅ Update `dags/spotify_pipeline_basic.py`:
   - Add new DBT task: `dbt_run_recommendations`
   - Task runs models: `track_cooccurrence`, `artist_affinity`, `track_recommendations`
   - Place after existing `dbt_run_gold` task
@@ -900,7 +900,7 @@ dbt_run_recommendations = BashOperator(
 dbt_run_gold >> dbt_run_recommendations >> dbt_test >> log_success
 ```
 
-- [ ] Test in Airflow:
+- ✅ Test in Airflow:
   - Trigger manual DAG run
   - Verify all 3 new models compile and run successfully
   - Check logs for any errors
@@ -915,7 +915,7 @@ dbt_run_gold >> dbt_run_recommendations >> dbt_test >> log_success
 **What it does:** Validate that recommendations are generated correctly and make sense.
 
 #### Tasks:
-- [ ] Query Snowflake to view your recommendations:
+- ✅ Query Snowflake to view your recommendations:
 ```sql
   SELECT 
       track_name,
@@ -950,7 +950,7 @@ dbt_run_gold >> dbt_run_recommendations >> dbt_test >> log_success
   LIMIT 10;
 ```
 
-- [ ] Verify artist affinity:
+- ✅ Verify artist affinity:
 ```sql
   SELECT 
       artist_name,
@@ -963,7 +963,7 @@ dbt_run_gold >> dbt_run_recommendations >> dbt_test >> log_success
   LIMIT 20;
 ```
 
-- [ ] Document findings:
+- ✅ Document findings:
   - Take screenshot of top 10 recommendations
   - Note: "Recommendations based on collaborative filtering using behavioral listening patterns"
   - Save example output for portfolio/interviews

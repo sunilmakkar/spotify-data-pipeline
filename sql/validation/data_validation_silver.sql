@@ -3,7 +3,7 @@
 -- ============================================================================
 -- Purpose: Validate data quality across Bronze, Silver, and Gold layers
 -- Project: Spotify Data Pipeline Recreation
--- Phases: 2.3 (Silver Layer) and 2.4 (Gold Layer)
+-- Last Updated: December 2025
 -- ============================================================================
 
 -- Set default context
@@ -17,7 +17,7 @@ USE WAREHOUSE SPOTIFY_WH;
 USE SCHEMA BRONZE;
 
 -- 1. Row Count Check
--- Expected: ~400 rows
+-- Expected: ~2,966 rows (2,600 simulated + 366 real plays)
 SELECT COUNT(*) as total_rows
 FROM BRONZE.plays;
 
@@ -63,7 +63,7 @@ FROM BRONZE.plays;
 USE SCHEMA SILVER;
 
 -- 1. Row Count Check
--- Expected: Same as bronze (~400 rows)
+-- Expected: ~2,966 rows (same as bronze)
 SELECT COUNT(*) as total_rows
 FROM SILVER.silver_plays;
 
@@ -163,7 +163,6 @@ ORDER BY date DESC, total_plays DESC
 LIMIT 10;
 
 -- 2. Top Tracks - Most Popular Tracks
--- Expected: 5 unique tracks with proper rankings
 SELECT 
     rank,
     track_id,
@@ -201,11 +200,11 @@ SELECT
     (SELECT SUM(total_plays) FROM GOLD.device_usage) as gold_total_plays;
 
 -- 6. Top Tracks Uniqueness Check
--- Should show 5 unique tracks (not duplicates)
+-- Should show unique tracks (not duplicates)
 SELECT COUNT(DISTINCT track_id) as unique_tracks
 FROM top_tracks;
 
--- 7. Duplicate Detection
+-- 7. Duplicate Detection in Gold Tables
 -- Should return no results
 SELECT 
     track_id,
@@ -213,6 +212,136 @@ SELECT
 FROM top_tracks
 GROUP BY track_id
 HAVING COUNT(*) > 1;
+
+
+-- ============================================================================
+-- DUPLICATE INVESTIGATION & RESOLUTION (December 13, 2025)
+-- ============================================================================
+-- CONTEXT: During Phase 5.3 preparation, discovered duplicate plays in pipeline
+-- PROBLEM: Same track at exact timestamp appearing 2-6 times (~84% duplicate rate)
+-- ROOT CAUSE: Backfill script ran multiple times using non-deterministic UUIDs (uuid4)
+-- RESOLUTION: Fixed at source (uuid5) and transformation (ROW_NUMBER deduplication)
+-- ============================================================================
+
+-- 8. User Breakdown (All Users)
+-- Shows distribution between real user (sunilmakkar97) and simulated data
+SELECT 
+    user_id,
+    COUNT(*) as play_count,
+    MIN(played_at) as first_play,
+    MAX(played_at) as last_play
+FROM SILVER.silver_plays
+GROUP BY user_id
+ORDER BY play_count DESC;
+
+-- 9. Check for Exact Duplicates (Real User Only)
+-- EXPECTED AFTER FIX: 0 rows (duplicates eliminated)
+-- Shows tracks with identical timestamps (indicates duplicates)
+SELECT 
+    track_name,
+    artist_name,
+    played_at,
+    COUNT(*) as duplicate_count
+FROM SILVER.silver_plays
+WHERE user_id = 'sunilmakkar97'
+GROUP BY track_name, artist_name, played_at
+HAVING COUNT(*) > 1
+ORDER BY duplicate_count DESC, played_at DESC
+LIMIT 20;
+
+-- 10. Check Event ID Uniqueness (Real User Only)
+-- EXPECTED AFTER FIX: 0 rows (all event_ids unique)
+-- Event IDs should be unique - duplicates indicate data quality issue
+SELECT 
+    event_id,
+    COUNT(*) as occurrences
+FROM SILVER.silver_plays
+WHERE user_id = 'sunilmakkar97'
+GROUP BY event_id
+HAVING COUNT(*) > 1
+ORDER BY occurrences DESC
+LIMIT 10;
+
+-- 11. Duplicate Investigation - Bronze Layer (Source of Truth)
+-- Checks if duplicates exist at ingestion layer (BRONZE)
+-- If duplicates here, they're coming from S3/Kafka/backfill script
+SELECT 
+    VALUE:event_id::VARCHAR as event_id,
+    COUNT(*) as occurrences
+FROM BRONZE.plays
+WHERE VALUE:user_id::VARCHAR = 'sunilmakkar97'
+GROUP BY VALUE:event_id
+HAVING COUNT(*) > 1
+ORDER BY occurrences DESC
+LIMIT 10;
+
+-- 12. Bronze vs Silver Record Count (Real User Only)
+-- BEFORE FIX: Bronze 366, Silver 366 (duplicates in both)
+-- AFTER FIX: Bronze 366, Silver 58 (deduplication working)
+SELECT 
+    'BRONZE (sunilmakkar97)' as layer,
+    COUNT(*) as record_count
+FROM BRONZE.plays
+WHERE VALUE:user_id::VARCHAR = 'sunilmakkar97'
+UNION ALL
+SELECT 
+    'SILVER (sunilmakkar97)' as layer,
+    COUNT(*) as record_count
+FROM SILVER.silver_plays
+WHERE user_id = 'sunilmakkar97';
+
+-- 13. Sample Duplicate Pattern in Bronze
+-- Shows how same play appears with different event_ids in source
+-- This helped identify root cause: uuid4 generating different IDs for same play
+SELECT 
+    VALUE:event_id::VARCHAR as event_id,
+    VALUE:track_name::VARCHAR as track_name,
+    VALUE:artist_name::VARCHAR as artist_name,
+    VALUE:played_at::VARCHAR as played_at,
+    metadata$filename as source_file,
+    metadata$file_row_number as row_in_file
+FROM BRONZE.plays
+WHERE VALUE:user_id::VARCHAR = 'sunilmakkar97'
+  AND VALUE:track_name::VARCHAR = 'All Eyez On Me (ft. Big Syke)'
+  AND VALUE:played_at::VARCHAR LIKE '2025-12-12 23:08%'
+ORDER BY VALUE:event_id::VARCHAR;
+
+-- 14. Verify Deduplication Logic Working
+-- EXPECTED AFTER FIX: total_records = unique_event_ids = unique_plays
+-- Shows that ROW_NUMBER deduplication in silver_plays.sql is working
+SELECT 
+    COUNT(*) as total_records,
+    COUNT(DISTINCT event_id) as unique_event_ids,
+    COUNT(DISTINCT track_id || played_at) as unique_plays
+FROM SILVER.silver_plays
+WHERE user_id = 'sunilmakkar97';
+
+-- 15. Final Verification: Clean Data
+-- RESULT AFTER FIX: 58 unique plays, 0 duplicates
+-- This query confirms the pipeline is producing clean, deduplicated data
+SELECT 
+    COUNT(*) as total_plays,
+    COUNT(DISTINCT track_name || artist_name || played_at) as unique_plays,
+    COUNT(*) - COUNT(DISTINCT track_name || artist_name || played_at) as duplicate_count
+FROM SILVER.silver_plays
+WHERE user_id = 'sunilmakkar97';
+
+
+-- ============================================================================
+-- RESOLUTION SUMMARY (December 13, 2025)
+-- ============================================================================
+-- FIX 1 (Source Level): Changed src/spotify_client.py from uuid.uuid4() to uuid.uuid5()
+--   - Event IDs now deterministic based on: user_id + track_id + played_at
+--   - Same play always generates same event_id
+--
+-- FIX 2 (Transformation Level): Updated dbt/models/silver/silver_plays.sql
+--   - Changed from SELECT DISTINCT event_id to ROW_NUMBER() OVER (PARTITION BY...)
+--   - Deduplicates on natural key: user_id, track_id, played_at
+--   - Handles edge case where same play has multiple event_ids
+--
+-- RESULT: Duplicates eliminated (366 rows → 58 unique plays)
+-- STATUS: Fixes committed to feature branch 'phase-5.3-collaborative-filtering'
+-- ============================================================================
 
 
 -- ============================================================================
