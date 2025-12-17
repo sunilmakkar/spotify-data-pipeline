@@ -1374,10 +1374,10 @@ st.rerun()
 - ✅ README complete
 
 ### End of Week 5:
-- [ ] Spotify API connected and OAuth implemented
-- [ ] Historical data pipeline running hourly with real Spotify data
-- [ ] Simple recommendation engine built and deployed
-- [ ] Dashboard shows recommendations based on listening history
+- ✅ Spotify API connected and OAuth implemented
+- ✅ Historical data pipeline running hourly with real Spotify data
+- ✅ Simple recommendation engine built and deployed
+- ✅ Dashboard shows recommendations based on listening history
 
 ### End of Week 6:
 - [ ] Currently playing poller running continuously
