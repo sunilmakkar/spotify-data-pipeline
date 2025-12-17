@@ -153,8 +153,15 @@ with DAG(
         bash_command='cd /opt/airflow/dbt && dbt run --select gold.*',
         on_failure_callback=task_failure_alert,
     )
+
+    # Task 6d: Run recommendation models
+    dbt_run_recommendations_task = BashOperator(
+        task_id='dbt_run_recommendations',
+        bash_command='cd /opt/airflow/dbt && dbt run --select track_cooccurrence artist_affinity track_recommendations',
+        on_failure_callback=task_failure_alert,
+    )
     
-    # Task 6d: Run DBT tests
+    # Task 6e: Run DBT tests
     dbt_test_task = BashOperator(
         task_id='dbt_test',
         bash_command='cd /opt/airflow/dbt && dbt test',
@@ -183,4 +190,4 @@ with DAG(
     generate_events_task >> wait_for_s3_task
     
     # Sequential flow after both complete
-    wait_for_s3_task >> stop_consumer_task >> refresh_snowflake_task >> dbt_compile_task >> dbt_run_silver_task >> dbt_run_gold_task >> dbt_test_task >> log_success_task
+    wait_for_s3_task >> stop_consumer_task >> refresh_snowflake_task >> dbt_compile_task >> dbt_run_silver_task >> dbt_run_gold_task >> dbt_run_recommendations_task >> dbt_test_task >> log_success_task
