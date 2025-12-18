@@ -1,0 +1,17 @@
+[Unit]
+Description=Spotify Currently Playing Poller
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/spotify-data-pipeline
+ExecStart=/usr/bin/python3 /home/ubuntu/spotify-data-pipeline/src/spotify_poller.py
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment="PATH=/usr/bin:/usr/local/bin"
+
+[Install]
+WantedBy=multi-user.target

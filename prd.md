@@ -996,7 +996,7 @@ dbt_run_gold >> dbt_run_recommendations >> dbt_test >> log_success
 - Runs as background daemon process
 
 #### Tasks:
-- [ ] Create `src/spotify_poller.py`:
+- ✅ Create `src/spotify_poller.py`:
   - Import SpotifyClient for authenticated API calls
   - Poll currently-playing endpoint every 5 seconds
   - Detect track changes (new track_id different from last)
@@ -1047,13 +1047,13 @@ class SpotifyPoller:
                 time.sleep(10)  # Back off on error
 ```
 
-- [ ] Create background process:
+- ✅ Create background process:
   - Create systemd service file (Linux) or launchd (Mac)
   - Configure to start on boot
   - Add restart on failure
   - Alternative: Use `nohup` or `screen` for simpler deployment
 
-- [ ] Create Snowflake table for current playback:
+- ✅ Create Snowflake table for current playback:
 ```sql
   CREATE TABLE IF NOT EXISTS SPOTIFY_DATA.BRONZE.currently_playing (
       user_id VARCHAR(255),
@@ -1067,7 +1067,7 @@ class SpotifyPoller:
   );
 ```
 
-- [ ] Test poller:
+- ✅ Test poller:
   - Run poller script: `python src/spotify_poller.py`
   - Play Spotify on your phone/computer
   - Skip between songs
@@ -1380,7 +1380,7 @@ st.rerun()
 - ✅ Dashboard shows recommendations based on listening history
 
 ### End of Week 6:
-- [ ] Currently playing poller running continuously
+- ✅ Currently playing poller running continuously
 - [ ] Real-time recommendation API deployed and cached
 - [ ] Live dashboard showing "Now Playing" with recommendations
 - [ ] Recommendations update within 5-10 seconds of playing new song
