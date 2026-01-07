@@ -1089,7 +1089,7 @@ class SpotifyPoller:
 - Same caching strategy (Redis with 1-hour TTL)
 
 #### Tasks:
-- [ ] Build FastAPI application - Create `src/recommendation_api.py`:
+- ✅ Build FastAPI application - Create `src/recommendation_api.py`:
   - Import FastAPI, Snowflake connector, Redis client
   - Endpoint: `GET /recommendations/{track_id}`
   - Query `SPOTIFY_DATA.GOLD.track_cooccurrence` for co-occurring tracks
@@ -1180,7 +1180,7 @@ async def health_check():
     return {"status": "healthy"}
 ```
 
-- [ ] Add caching layer:
+- ✅ Add caching layer:
   - Install Redis on EC2: `sudo apt install redis-server`
   - Install Redis Python client: `pip install redis`
   - Cache key format: `rec:{track_id}`
@@ -1188,14 +1188,14 @@ async def health_check():
   - Cache hit should return in <100ms
   - Cache miss queries Snowflake (~300-500ms)
 
-- [ ] Deploy API on EC2:
+- ✅ Deploy API on EC2:
   - Install FastAPI: `pip install fastapi uvicorn`
   - Run with Uvicorn: `uvicorn recommendation_api:app --host 0.0.0.0 --port 8000`
   - Configure as systemd service for auto-restart
   - Expose port 8000 in EC2 security group
   - Access at: `http://YOUR_EC2_IP:8000`
 
-- [ ] Test API:
+- ✅ Test API:
   - Test health endpoint: `curl http://YOUR_EC2_IP:8000/health`
   - Test recommendations with real track ID:
 ```bash
@@ -1381,7 +1381,7 @@ st.rerun()
 
 ### End of Week 6:
 - ✅ Currently playing poller running continuously
-- [ ] Real-time recommendation API deployed and cached
+- ✅ Real-time recommendation API deployed and cached
 - [ ] Live dashboard showing "Now Playing" with recommendations
 - [ ] Recommendations update within 5-10 seconds of playing new song
 - [ ] Full near real-time user experience implemented
