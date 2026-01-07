@@ -77,3 +77,5 @@ typing_extensions==4.15.0
 tzdata==2025.2
 urllib3==2.5.0
 zipp==3.23.0
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
