@@ -481,12 +481,22 @@ SPOTIFY-DATA-PIPELINE/
 
 ---
 
-## 🤝 Contributing
+# Spotify Data Pipeline
 
-This is a portfolio project, but feedback and suggestions are welcome! Feel free to:
-- Open issues for bugs or enhancement ideas
-- Submit pull requests for improvements
-- Share your own implementations or variations
+**Status**: 🔴 **Decommissioned** (January 2026)
+
+This project was successfully built and deployed from November 2025 to 
+January 2026. Infrastructure has been shut down to avoid ongoing cloud 
+costs. All documentation, code, and evidence of the working system is 
+preserved in this repository.
+
+## To Run This Project
+
+This project requires:
+- Confluent Cloud account or local Kafka cluster
+- Snowflake account with appropriate credentials
+- Docker environment
+- [Setup instructions preserved for reference]
 
 ---
 
