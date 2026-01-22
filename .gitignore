@@ -2,6 +2,9 @@
 
 # Environment variables
 .env
+rsa_key.p8
+*.p8
+streamlit_dashboard/.streamlit/secrets.toml
 
 # Python
 venv/
