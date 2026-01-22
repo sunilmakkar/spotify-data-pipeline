@@ -457,7 +457,7 @@ SPOTIFY-DATA-PIPELINE/
 └── streamlit_dashboard/   # Streamlit UI source code
 ```
 
-- Full Project Structure Located Here: 
+- [Click Here For Full Project Structure](docs/architecture/full_project_structure.md)
 
 ---
 
@@ -472,7 +472,7 @@ SPOTIFY-DATA-PIPELINE/
 5. **Incremental Processing:** Date tracker ensures sequential data generation without duplicates
 6. **Monitoring:** Separate monitoring DAG provides continuous data quality visibility
 
-# Near Real-Time Poller Service
+#### Near Real-Time Poller Service
 
 7. **Custom Polling vs. Webhooks:** ince the Spotify Web API lacks webhook support for playback events, I designed a custom polling service that achieves near real-time detection by monitoring state changes every 5 seconds.
 8. **Daemon Management:** Implementing the poller and API as Systemd background services ensured high availability, allowing the real-time engine to persist across sessions and automatically recover from system restarts.
@@ -481,7 +481,7 @@ SPOTIFY-DATA-PIPELINE/
 
 ---
 
-# Spotify Data Pipeline
+## Spotify Data Pipeline
 
 **Status**: 🔴 **Decommissioned** (January 2026)
 
