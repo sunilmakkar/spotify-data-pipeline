@@ -16,7 +16,7 @@ spotify_analytics:
     dev:
       account: uxojbrg-rm52997
       database: spotify_data
-      password: Sun97**San93**
+      private_key_path: /Users/sunilmakkar/spotify-data-pipeline/rsa_key.p8
       role: accountadmin
       schema: bronze
       threads: 4

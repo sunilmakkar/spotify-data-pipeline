@@ -1,13 +1,12 @@
-# Spotify Data Pipeline
+# Spotify Data Platform
 
-A production-ready data engineering project that simulates Spotify's data infrastructure, processing listening events through a multi-layer medallion architecture (Bronze → Silver → Gold). Built to demonstrate end-to-end data pipeline skills using industry-standard tools.
+A production-grade, hybrid data engineering project that simulates Spotify's data infrastructure and processes real-time and batch listening data through a multi-layer Medallion Architecture (Bronze → Silver → Gold). This project demonstrates a full data lifecycle: from event-driven ingestion and warehouse modeling to real-time serving via a sub-second recommendation API.
 
-🔗 **Live Dashboard:** [https://spotify-data-pipeline-2025.streamlit.app](https://spotify-data-pipeline-2025.streamlit.app)
+🔗 **Live Dashboard:** ![Streamlit Dashboard](docs/screenshots/spotify-dashboard.png)
 
----
+📖 **API Documentation:** [Detailed API Specs](docs/api/README.md)
 
 ## 📋 Table of Contents
-
 - [Architecture](#architecture)
 - [Tech Stack](#tech-stack)
 - [Data Flow](#data-flow)
@@ -15,17 +14,25 @@ A production-ready data engineering project that simulates Spotify's data infras
 - [Prerequisites](#prerequisites)
 - [Setup & Installation](#setup--installation)
 - [Running the Pipeline](#running-the-pipeline)
+- [Serving Layer & API](#serving-layer--api)
 - [Dashboard](#dashboard)
 - [Project Structure](#project-structure)
-- [Future Enhancements](#future-enhancements)
 
 ---
 
 ## 🏗️ Architecture
 
-![System Architecture](docs/architecture/system_architecture.png)
+The platform operates on two distinct data velocities, unified within Snowflake:
 
-The pipeline follows a medallion architecture pattern with three distinct layers:
+- **Path A (Batch):** Spotify API → Kafka → S3 → Snowflake (Orchestrated by Airflow).
+
+![System Architecture](docs/architecture/batch_system_architecture.png)
+
+- **Path B (Near Real-Time):** Spotify API → Python Poller (Systemd) → Snowflake → FastAPI (Redis Cache).
+
+![System Architecture](docs/architecture/near_realtime_system_architecture.png)
+
+The batch pipeline follows a medallion architecture pattern with three distinct layers:
 
 - **Bronze Layer:** Raw data stored as Parquet files in S3, accessed via Snowflake external tables
 - **Silver Layer:** Cleaned, deduplicated data with quality tests
@@ -35,102 +42,67 @@ The pipeline follows a medallion architecture pattern with three distinct layers
 
 ## 🛠️ Tech Stack
 
-| Component | Technology | Version | Purpose |
-|-----------|-----------|---------|---------|
-| **Event Generation** | Python | 3.13.2 | Simulates Spotify listening events |
-| **Message Queue** | Apache Kafka | 2.13 | Handles real-time event streaming |
-| **Cloud Storage** | AWS S3 | - | Stores raw Parquet files (partitioned by date/hour) |
-| **Compute** | AWS EC2 | t3.small | Hosts Kafka, Airflow, and pipeline orchestration |
-| **Data Warehouse** | Snowflake | 9.38.4 | Hosts Bronze/Silver/Gold layers |
-| **Transformations** | DBT | 1.10.15 | Data modeling and business logic |
-| **Orchestration** | Apache Airflow | 2.8.1 | Schedules and monitors pipeline tasks |
-| **Visualization** | Streamlit | 1.40.1 | Interactive dashboard for analytics |
-| **Infrastructure** | Docker Compose | 2.24.0 | Containerized deployment |
+| Component      | Technology      | Version | Purpose                                      |
+|----------------|-----------------|---------|----------------------------------------------|
+| Streaming      | Apache Kafka    | 2.13    | High-throughput event buffering              |
+| Data Lake      | AWS S3          | -       | Partitioned Parquet storage (Bronze Layer)   |
+| Warehouse      | Snowflake       | 9.38.4  | Unified compute for Silver/Gold modeling     |
+| Modeling       | dbt Core        | 1.10.15 | SQL-based transformations & quality testing  |
+| Orchestration  | Apache Airflow  | 2.8.1   | Batch workflow scheduling & monitoring       |
+| Serving API    | FastAPI         | 0.115.0 | Sub-second recommendation serving            |
+| Cache          | Redis           | 7.0     | In-memory storage for API performance        |
+| Monitoring     | Systemd         | -       | Linux daemon management for real-time services |
+| Visualization  | Streamlit       | 1.40.1  | End-user analytical dashboard                |
 
 ---
 
 ## 🔄 Data Flow
 
-⚠️ **PHASE 5 CHANGE:** Steps 1-2 will be replaced with real Spotify API integration
+### 1. Ingestion (Hybrid Velocity)
+- **Spotify API Integration:** Replaced synthetic simulators with real-world data via OAuth 2.0.
+- **Batch Path:** Historical listening events are produced to Kafka, batched into Parquet format, and landed in AWS S3 partitioned by year/month/day/hour.
+- **Near Real-Time Path:** A custom Python Poller daemon checks the Spotify `/currently-playing` endpoint every 5 seconds, logging state changes directly to Snowflake.
 
-1. **Event Generation** ⚠️ PHASE 5: Real Spotify API
-   - EventSimulator generates 200 synthetic listening events per run
-   - Events include: track_id, user_id, played_at, duration_ms, device_type
-   - Events distributed randomly across 24 hours for realistic data
+### 2. Transformation (dbt Medallion Architecture)
+- **Bronze Layer:** Raw data accessed via Snowflake external tables.
+- **Silver Layer:** Data is deduplicated, type-cast, and validated with strict quality tests.
+- **Gold Layer:** Business-ready models calculate daily user metrics, artist affinity, and track co-occurrence patterns.
 
-2. **Event Streaming** ⚠️ PHASE 5: Real-time API webhook
-   - Events published to Kafka topic: `spotify-plays`
-   - Kafka handles message buffering and delivery guarantees
-
-3. **Data Ingestion**
-   - Kafka Consumer reads events in batches (100 events or 60s timeout)
-   - Events written to S3 as Parquet files: `s3://spotify-data-lake-sunil-2025/raw_events/year=YYYY/month=MM/day=DD/hour=HH/`
-
-4. **Bronze Layer**
-   - Snowflake external table points to S3 bucket
-   - Raw data accessible via SQL without copying
-
-5. **Silver Layer (DBT)**
-   - Deduplication based on event_id
-   - Data quality tests (not_null, unique, accepted_values)
-   - Type casting and standardization
-
-6. **Gold Layer (DBT)**
-   - `daily_user_stats`: Daily listening metrics
-   - `top_tracks`: Most played tracks with rankings
-   - `top_artists`: Most played artists with unique track counts
-   - `device_usage`: Listening patterns by device type
-
-7. **Visualization**
-   - Streamlit dashboard connects to Snowflake Gold layer
-   - Real-time updates as new data flows through pipeline
+### 3. Serving (Recommendation Engine)
+- **Collaborative Filtering:** Recommendations are generated using a weighted scoring model: (Co-occurrence * 0.7) + (Artist Affinity * 0.3).
+- **Performance:** FastAPI serves these models with Redis caching, achieving <100ms response times for cache hits.
 
 ---
 
 ## 📊 Project Phases
 
-### Phase 1: Infrastructure Setup ✅
-- AWS account configuration (EC2 t3.small, S3 bucket, IAM roles)
-- Snowflake warehouse and database setup
-- Local Kafka cluster on EC2
-- EventSimulator for synthetic data generation
+### Phase 1-3: Core Infrastructure & Batch Pipeline ✅
+- Built the AWS/Snowflake stack and Kafka streaming layer.
+- Implemented dbt Medallion modeling and Airflow orchestration for batch processing.
 
-### Phase 2: DBT Transformations ✅
-- Bronze layer: External table configuration
-- Silver layer: Data cleaning and deduplication
-- Gold layer: 4 analytical models with comprehensive tests
-- DBT documentation and lineage graphs
+### Phase 4-5: Real API & Behavioral Modeling ✅
+- Integrated real Spotify Web API for historical backfills and hourly ingestion.
+- Pivoted from audio-feature modeling to Behavioral Collaborative Filtering using co-occurrence and artist preference.
 
-### Phase 3: Airflow Orchestration ✅
-- Production DAG: 10 tasks, ~6 minute runtime
-- Monitoring DAG: Data quality checks every 30 minutes
-- Error handling: 3 retries with exponential backoff
-- Email alerts via Gmail SMTP
-- Memory optimization for t3.small instance (2GB RAM + 2GB swap)
-
-### Phase 4: Dashboard & Documentation ✅
-- **Phase 4.1:** Streamlit dashboard (5 pages: Overview, Trends, Top Tracks, Top Artists, Device Usage)
-- **Phase 4.2:** System architecture diagram, README, setup guide
-
-### Phase 5: Real Spotify API Integration 🔜
-⚠️ **FUTURE ENHANCEMENT**
-- Replace EventSimulator with Spotify Web API
-- Implement OAuth 2.0 authentication for user listening history
-- Build simple recommendation engine based on listening patterns
+### Phase 6: Real-Time Serving & Automation ✅
+- Deployed FastAPI service with a Redis caching layer for recommendation serving.
+- Implemented background daemons via Systemd to manage the polling engine and API services.
 
 ---
 
 ## 📦 Prerequisites
 
 ### Required Accounts
-- **AWS Account** with IAM permissions for EC2, S3
-- **Snowflake Account** (free trial available)
+- **AWS Account** (EC2, S3, IAM).
+- **Snowflake Account** (Warehouse, Database, Schemas).
+- **Spotify Developer Account** (API Client ID/Secret).
 - **GitHub Account** for version control
-- **Gmail Account** for Airflow email alerts (with App Password)
+- **Gmail Account** (For Airflow SMTP alerts).
 
 ### Local Environment
 - **Python:** 3.13.2 or higher
 - **Docker & Docker Compose:** 2.24.0 or higher
+- **Redis Server:** 7.0+ (For API caching).
 - **AWS CLI:** 2.32.12 or higher
 - **Git:** Latest version
 
@@ -295,14 +267,81 @@ docker-compose exec airflow-scheduler bash -c "cd /opt/airflow/dbt && dbt debug"
 docker-compose exec airflow-scheduler bash -c "cd /opt/airflow/dbt && dbt run"
 ```
 
+### 8. Near Real-Time Poller Setup (Systemd)
+
+To enable near real-time playback detection, the platform uses a background daemon managed by Systemd. This service continuously polls the Spotify API and logs state changes to Snowflake.
+
+- Configure the Service File: The service configuration is located in `systemd/spotify-poller.service`. You must update the file paths within this file to match your EC2 environment:
+```
+[Unit]
+Description=Spotify Currently Playing Poller
+After=network.target
+
+[Service]
+# Update these paths to match your project location
+User=ubuntu
+WorkingDirectory=/home/ubuntu/spotify-data-pipeline
+ExecStart=/home/ubuntu/spotify-data-pipeline/venv/bin/python src/spotify_poller.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+- Deploy and Enable the Background Service
+- Copy the service file to the system directory, then enable it to ensure it starts automatically on boot:
+```
+# Copy the service file to systemd
+sudo cp systemd/spotify-poller.service /etc/systemd/system/
+
+# Reload systemd to recognize the new service
+sudo systemctl daemon-reload
+
+# Enable the service for auto-start on boot
+sudo systemctl enable spotify-poller
+
+# Start the service
+sudo systemctl start spotify-poller
+```
+
+- Monitor the Service Logs
+- Since the poller runs as a background process, you can verify its activity by following the system logs:
+```
+# View real-time logs for the poller
+sudo journalctl -u spotify-poller -f
+```
+
+### 9. Recommendation API Setup (Systemd)
+
+Similar to the poller, the FastAPI recommendation engine is managed as a background service to ensure sub-second response times and high availability.
+
+- Deploy the API Service
+- Follow the same process in step 8 to enable the FastAPI serving layer:
+```
+# Copy the service file
+sudo cp systemd/recommendation-api.service /etc/systemd/system/
+
+# Reload and enable
+sudo systemctl daemon-reload
+sudo systemctl enable recommendation-api
+
+# Start the service
+sudo systemctl start recommendation-api
+```
+
+- Verify Service Status
+```
+sudo systemctl status recommendation-api
+```
+
 ---
 
 ## ▶️ Running the Pipeline
 
-### Access Airflow UI
+### Batch Pipeline (Airflow)
 
-1. Navigate to: `http://your-ec2-ip:8082`
-2. Login credentials: `airflow` / `airflow`
+1. Access Airflow UI at `http://your-ec2-ip:8082`.
+2. Trigger the `spotify_pipeline_basic` DAG to run the ingestion and dbt models.
 
 ### Trigger Pipeline Manually
 
@@ -330,11 +369,31 @@ docker-compose exec airflow-scheduler bash -c "cd /opt/airflow/dbt && dbt run"
 - **Checks:** Row counts, null values, duplicate detection, value ranges, freshness
 - **Alerts:** Email notifications on failures
 
+### Real-Time Services (Systemd)
+- Use `journalctl -u spotify-poller -f` to monitor real-time playback detection.
+- Use `journalctl -u recommendation-api -f` to view API request logs.
+
+![System Architecture](docs/screenshots/spotify-poller.png)
+
+---
+
+## ⚡ Serving Layer & API
+
+The platform includes a production-ready API for consuming processed data. For detailed endpoint specifications, performance benchmarks, and service management commands, see the [API Documentation](docs/api/README.md).
+
+**Key API Features:**
+- `GET /recommendations`: Serves personalized tracks based on current playback.
+- **Swagger UI:** Interactive testing available at `/docs`.
+
+REDOC SCREENSHOT
+
 ---
 
 ## 📈 Dashboard
 
 **Live URL:** [https://spotify-data-pipeline-2025.streamlit.app](https://spotify-data-pipeline-2025.streamlit.app)
+
+Link to docs- where all screenshots are
 
 ### Dashboard Pages
 
@@ -388,160 +447,25 @@ Dashboard will open at `http://localhost:8501`
 ---
 
 ## 📁 Project Structure
-
-## Project Directory Structure
-
 ```
 SPOTIFY-DATA-PIPELINE/
-├── __pycache__/
-├── .devcontainer/
-├── api/
-│   ├── __pycache__/
-│   ├── __init__.py
-│   ├── cache.py
-│   ├── database.py
-│   ├── main.py
-│   └── models.py
-├── dags/
-│   ├── data_quality_monitoring.py         # Monitoring DAG
-│   └── spotify_pipeline_basic.py          # Main production DAG
-├── dbt/
-│   ├── analyses/
-│   ├── dbt_packages/
-│   ├── dbt_utils/
-│   ├── logs/
-│   ├── macros/
-│   │   ├── .gitkeep
-│   │   └── get_custom_schema.sql
-│   ├── models/
-│   │   ├── bronze/
-│   │   │   └── sources.yml
-│   │   ├── gold/
-│   │   │   ├── artist_affinity.sql
-│   │   │   ├── daily_user_stats.sql
-│   │   │   ├── device_usage.sql
-│   │   │   ├── schema.yml
-│   │   │   ├── top_artists.sql
-│   │   │   ├── top_tracks.sql
-│   │   │   ├── track_cooccurrence.sql
-│   │   │   └── track_recommendations.sql
-│   │   └── silver/
-│   │       ├── silver_plays.sql
-│   │       └── silver_plays.yml
-│   ├── seeds/
-│   ├── snapshots/
-│   ├── target/
-│   ├── tests/
-│   ├── .user.yml
-│   ├── dbt_project.yml
-│   ├── package-lock.yml
-│   ├── packages.yml
-│   └── profiles.yml
-├── docs/
-│   ├── airflow/
-│   │   ├── airflow_architecture.md
-│   │   ├── airflow_setup.md
-│   │   └── troubleshooting.md
-│   ├── api/
-│   │   └── README.md
-│   ├── architecture/
-│   │   └── system_architecture.png
-│   ├── dbt/
-│   │   ├── erds/
-│   │   │   └── gold_layer_erd.png
-│   │   ├── lineage/
-│   │   │   └── spotify_dbt_lineage_graph.png
-│   │   └── screenshots/
-│   │       ├── dag_graph_monitoring.png
-│   │       ├── dag_graph_production.png
-│   │       ├── email_alert_example.png
-│   │       └── successful_dag_run.png
-│   └── setup.md
-├── logs/
-├── plugins/
-├── scripts/
-│   └── dashboard.py
-├── sql/
-│   ├── ddl/
-│   │   └── spotify_DDL.sql
-│   └── validation/
-│       ├── api_validation_queries.sql
-│       ├── data_validation_silver.sql
-│       ├── poller_validation_queries.sql
-│       └── recommendation_validation_queries.sql
-├── src/
-│   ├── __pycache__/
-│   ├── __init__.py
-│   ├── event_simulator.py                 # Synthetic event generator
-│   ├── kafka_consumer_background.py
-│   ├── kafka_consumer.py                  # Kafka to S3 consumer
-│   ├── kafka_producer.py
-│   ├── simulator_last_date.txt            # Date tracker for sequential data
-│   ├── spotify_client.py
-│   ├── spotify_historical_backfill.py
-│   └── spotify_poller.py
-├── streamlit_dashboard/
-│   ├── __pycache__/
-│   ├── .streamlit/
-│   │   └── secrets.toml                   # Snowflake credentials (not committed)
-│   ├── app.py                             # Main dashboard application
-│   ├── requirements.txt                   # Dashboard dependencies
-│   └── utils.py                           # Snowflake connection helpers
-├── systemd/
-│   ├── recommendation-api.service
-│   └── spotify-poller.service
-├── tests/
-│   ├── __pycache__/
-│   ├── __init__.py
-│   ├── test_kafka.py
-│   ├── test_parquet_validation.py
-│   ├── test_s3.py
-│   ├── test_snowflake_external_table.py
-│   └── test_snowflake.py
-├── venv/
-├── .cache
-├── .env                                   # Environment variables (not committed)
-├── .gitignore                             # Git ignore rules
-├── config.py                              # Centralized configuration
-├── docker-compose.yml                     # Airflow containerization
-├── Dockerfile                             # Custom Airflow image
-├── prd.md
-├── project.md
-├── README.md                              # This file
-└── requirements.txt                       # Python dependencies
+├── api/                   # FastAPI recommendation service source
+├── dags/                  # Airflow workflow definitions
+├── dbt/                   # dbt models (Bronze, Silver, Gold)
+├── docs/                  # Technical specs & service guides
+│   └── api/README.md      # Dedicated API documentation
+├── src/                   # Core logic (Poller, Clients, Kafka)
+├── systemd/               # Linux service configuration files
+└── streamlit_dashboard/   # Streamlit UI source code
 ```
 
----
-
-## 🚀 Future Enhancements
-
-### Phase 5: Real Spotify API Integration ⚠️
-
-**What Will Change:**
-
-1. **Authentication**
-   - Implement OAuth 2.0 authorization flow
-   - Store refresh tokens securely
-   - Handle token expiration and renewal
-
-2. **Data Ingestion** (Replaces EventSimulator)
-   - Call Spotify Web API `/v1/me/player/recently-played` endpoint
-   - Fetch listening history (last 50 tracks)
-   - Run hourly to capture recent listening data
-
-3. **Simple Recommendation Engine**
-   - Analyze listening patterns (top genres, artists, tracks)
-   - Build collaborative filtering model
-   - Generate personalized track recommendations
-
-**Files That Will Change:**
-- ✏️ `src/event_simulator.py` → Rewrite to `src/spotify_api_client.py`
-- ✏️ `dags/spotify_pipeline_basic.py` → Update task: `generate_events` → `fetch_spotify_data`
-- ✏️ `streamlit_dashboard/app.py` → Add recommendations page
+- Full Project Structure Located Here: 
 
 ---
 
 ## 📝 Key Learnings
+
+### Batch Pipeline
 
 1. **Medallion Architecture:** Separating raw, cleaned, and analytical layers improves maintainability and query performance
 2. **Memory Optimization:** Configured Airflow for t3.small (2GB RAM) by limiting parallelism and adding swap space
@@ -549,6 +473,13 @@ SPOTIFY-DATA-PIPELINE/
 4. **Data Quality:** DBT tests catch issues early before bad data propagates to Gold layer
 5. **Incremental Processing:** Date tracker ensures sequential data generation without duplicates
 6. **Monitoring:** Separate monitoring DAG provides continuous data quality visibility
+
+# Near Real-Time Poller Service
+
+7. **Custom Polling vs. Webhooks:** ince the Spotify Web API lacks webhook support for playback events, I designed a custom polling service that achieves near real-time detection by monitoring state changes every 5 seconds.
+8. **Daemon Management:** Implementing the poller and API as Systemd background services ensured high availability, allowing the real-time engine to persist across sessions and automatically recover from system restarts.
+9. **Hybrid Data Velocity:** Managing both hourly batch DAGs and a 5-second polling interval within the same Snowflake environment demonstrated how to unify different data velocities for a single analytical view.
+10. **Sub-second Serving:** Leveraging **Redis caching** for the recommendation API highlighted the importance of in-memory storage to reduce latency from ~700ms (database query) to <100ms (cache hit) for end-user applications.
 
 ---
 
@@ -558,21 +489,6 @@ This is a portfolio project, but feedback and suggestions are welcome! Feel free
 - Open issues for bugs or enhancement ideas
 - Submit pull requests for improvements
 - Share your own implementations or variations
-
----
-
-## 📄 License
-
-This project is open source and available under the MIT License.
-
----
-
-## 👤 Author
-
-**Sunil Makkar**
-- GitHub: [@sunilmakkar](https://github.com/sunilmakkar)
-- Project Link: [https://github.com/sunilmakkar/spotify-data-pipeline](https://github.com/sunilmakkar/spotify-data-pipeline)
-- Live Dashboard: [https://spotify-data-pipeline-2025.streamlit.app](https://spotify-data-pipeline-2025.streamlit.app)
 
 ---
 
@@ -586,4 +502,11 @@ This project is open source and available under the MIT License.
 
 ---
 
-**Built with ❤️ as a portfolio project to demonstrate data engineering skills**
+## 👤 Author
+
+**Sunil Makkar**
+
+- GitHub: [@sunilmakkar](https://github.com/sunilmakkar)
+- Project Link: https://github.com/sunilmakkar/spotify-data-pipeline
+
+Built with ❤️ as a portfolio project to demonstrate modern hybrid data engineering skills.
