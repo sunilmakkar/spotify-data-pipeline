@@ -2,7 +2,7 @@
 
 A production-grade, hybrid data engineering project that simulates Spotify's data infrastructure and processes real-time and batch listening data through a multi-layer Medallion Architecture (Bronze → Silver → Gold). This project demonstrates a full data lifecycle: from event-driven ingestion and warehouse modeling to real-time serving via a sub-second recommendation API.
 
-🔗 **Live Dashboard:** ![Streamlit Dashboard](docs/screenshots/spotify-dashboard.png)
+🔗 **Live Dashboard Screenshot:** ![Streamlit Dashboard](docs/screenshots/spotify-dashboard.png)
 
 📖 **API Documentation:** [Detailed API Specs](docs/api/README.md)
 
@@ -385,15 +385,13 @@ The platform includes a production-ready API for consuming processed data. For d
 - `GET /recommendations`: Serves personalized tracks based on current playback.
 - **Swagger UI:** Interactive testing available at `/docs`.
 
-REDOC SCREENSHOT
+![API Dashboard](docs/api/swagger_docs/spotify-rec-api.png)
 
 ---
 
 ## 📈 Dashboard
 
 **Live URL:** [https://spotify-data-pipeline-2025.streamlit.app](https://spotify-data-pipeline-2025.streamlit.app)
-
-Link to docs- where all screenshots are
 
 ### Dashboard Pages
 
