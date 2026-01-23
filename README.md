@@ -17,6 +17,9 @@ A production-grade, hybrid data engineering project that simulates Spotify's dat
 - [Serving Layer & API](#serving-layer--api)
 - [Dashboard](#dashboard)
 - [Project Structure](#project-structure)
+- [Key Learnings](#key-learnings)
+- [Spotify Data Pipeline Status](#spotify-data-pipeline-status)
+- [Author](#author)
 
 ---
 
@@ -40,7 +43,7 @@ The batch pipeline follows a medallion architecture pattern with three distinct 
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component      | Technology      | Version | Purpose                                      |
 |----------------|-----------------|---------|----------------------------------------------|
@@ -56,7 +59,7 @@ The batch pipeline follows a medallion architecture pattern with three distinct 
 
 ---
 
-## 🔄 Data Flow
+## Data Flow
 
 ### 1. Ingestion (Hybrid Velocity)
 - **Spotify API Integration:** Replaced synthetic simulators with real-world data via OAuth 2.0.
@@ -74,7 +77,7 @@ The batch pipeline follows a medallion architecture pattern with three distinct 
 
 ---
 
-## 📊 Project Phases
+## Project Phases
 
 ### Phase 1-3: Core Infrastructure & Batch Pipeline ✅
 - Built the AWS/Snowflake stack and Kafka streaming layer.
@@ -90,7 +93,7 @@ The batch pipeline follows a medallion architecture pattern with three distinct 
 
 ---
 
-## 📦 Prerequisites
+## Prerequisites
 
 ### Required Accounts
 - **AWS Account** (EC2, S3, IAM).
@@ -115,7 +118,7 @@ The batch pipeline follows a medallion architecture pattern with three distinct 
 
 ---
 
-## 🚀 Setup & Installation
+## Setup & Installation
 
 ### 1. Clone Repository
 
@@ -336,7 +339,7 @@ sudo systemctl status recommendation-api
 
 ---
 
-## ▶️ Running the Pipeline
+## Running the Pipeline
 
 ### Batch Pipeline (Airflow)
 
@@ -389,7 +392,7 @@ The platform includes a production-ready API for consuming processed data. For d
 
 ---
 
-## 📈 Dashboard
+## Dashboard
 
 **Live URL:** [https://spotify-data-pipeline-2025.streamlit.app](https://spotify-data-pipeline-2025.streamlit.app)
 
@@ -444,7 +447,7 @@ Dashboard will open at `http://localhost:8501`
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 ```
 SPOTIFY-DATA-PIPELINE/
 ├── api/                   # FastAPI recommendation service source
@@ -461,7 +464,7 @@ SPOTIFY-DATA-PIPELINE/
 
 ---
 
-## 📝 Key Learnings
+## Key Learnings
 
 ### Batch Pipeline
 
@@ -481,7 +484,7 @@ SPOTIFY-DATA-PIPELINE/
 
 ---
 
-## Spotify Data Pipeline
+## Spotify Data Pipeline Status
 
 **Status**: 🔴 **Decommissioned** (January 2026)
 
@@ -490,7 +493,7 @@ January 2026. Infrastructure has been shut down to avoid ongoing cloud
 costs. All documentation, code, and evidence of the working system is 
 preserved in this repository.
 
-## To Run This Project
+### To Run This Project
 
 This project requires:
 - Confluent Cloud account or local Kafka cluster
