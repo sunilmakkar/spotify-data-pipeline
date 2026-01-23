@@ -27,7 +27,7 @@ A production-grade, hybrid data engineering project that simulates Spotify's dat
 
 The platform operates on two distinct data velocities, unified within Snowflake:
 
-- **Path A (Batch):** Spotify API → Kafka → S3 → Snowflake (Orchestrated by Airflow).
+- **Path A (Batch):** Spotify API → Kafka → S3 → Snowflake → DBT Silver → DBT Gold → Streamlit Dashboard (Orchestrated by Airflow).
 
 ![System Architecture](docs/architecture/batch_system_architecture.png)
 
