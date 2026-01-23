@@ -31,15 +31,15 @@ The platform operates on two distinct data velocities, unified within Snowflake:
 
 ![System Architecture](docs/architecture/batch_system_architecture.png)
 
-- **Path B (Near Real-Time):** Spotify API → Python Poller (Systemd) → Snowflake → FastAPI (Redis Cache).
-
-![System Architecture](docs/architecture/near_realtime_system_architecture.png)
-
 The batch pipeline follows a medallion architecture pattern with three distinct layers:
 
 - **Bronze Layer:** Raw data stored as Parquet files in S3, accessed via Snowflake external tables
 - **Silver Layer:** Cleaned, deduplicated data with quality tests
 - **Gold Layer:** Analytical models optimized for business intelligence and visualization
+
+- **Path B (Near Real-Time):** Spotify API → Python Poller (Systemd) → Snowflake → FastAPI (Redis Cache).
+
+![System Architecture](docs/architecture/near_realtime_system_architecture.png)
 
 ---
 
