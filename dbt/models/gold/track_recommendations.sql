@@ -60,7 +60,7 @@ filtered_recommendations AS (
     LEFT JOIN played_tracks pt 
         ON r.user_id = pt.user_id 
         AND r.recommended_track_id = pt.track_id
-    WHERE pt.track_id IS NULL  -- Exclude already played tracks
+    --WHERE pt.track_id IS NULL  -- Exclude already played tracks
 ),
 
 ranked_recommendations AS (
