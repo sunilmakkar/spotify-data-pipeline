@@ -10,8 +10,6 @@
 -- ============================================================================
 -- Purpose: Generate personalized track recommendations
 -- Logic: Combines co-occurrence (70%) + artist affinity (30%)
--- Filters: Excludes already-played tracks
--- Note: May return 0 results with limited listening history (cold-start)
 -- ============================================================================
 
 WITH played_tracks AS (
@@ -60,7 +58,6 @@ filtered_recommendations AS (
     LEFT JOIN played_tracks pt 
         ON r.user_id = pt.user_id 
         AND r.recommended_track_id = pt.track_id
-    --WHERE pt.track_id IS NULL  -- Exclude already played tracks
 ),
 
 ranked_recommendations AS (
