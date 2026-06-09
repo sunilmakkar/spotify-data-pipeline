@@ -55,9 +55,6 @@ filtered_recommendations AS (
         r.based_on_track,
         r.based_on_artist
     FROM recommendations r
-    LEFT JOIN played_tracks pt 
-        ON r.user_id = pt.user_id 
-        AND r.recommended_track_id = pt.track_id
 ),
 
 ranked_recommendations AS (
